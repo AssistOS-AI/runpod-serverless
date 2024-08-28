@@ -4,24 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #inputForm {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-size: 1em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            display: inline-block;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        input[type="button"] {
+            width: 100%;
+            background-color: #4285f4;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        input[type="button"]:hover {
+            background-color: #357ae8;
+        }
+
+        #result {
+            text-align: center;
+            font-size: 1em;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
 <h1>Submit Your Details</h1>
 <form id="inputForm">
-    <label for="input_url">Input URL:</label><br>
-    <input type="text" id="input_url" name="input_url" value="http://demo.assistos.net:8020/demo-bucket/titlu.png" required><br><br>
+    <label for="input_url">Input URL:</label>
+    <input type="text" id="input_url" name="input_url" value="http://demo.assistos.net:8020/demo-bucket/titlu.png" required>
 
-    <label for="accessKeyId">Access Key ID:</label><br>
-    <input type="text" id="accessKeyId" name="accessKeyId" value="" required><br><br>
+    <label for="secretAccessKey">Secret Access Key:</label>
+    <input type="password" id="secretAccessKey" name="secretAccessKey" value="" required>
 
-    <label for="secretAccessKey">Secret Access Key:</label><br>
-    <input type="password" id="secretAccessKey" name="secretAccessKey" value="" required><br><br>
+    <label for="apiKey">API Key:</label>
+    <input type="password" id="apiKey" name="apiKey" value="" required>
 
-    <label for="apiKey">API Key:</label><br>
-    <input type="password" id="apiKey" name="apiKey" value="" required><br><br>
-
-    <label for="outputKey">Output Image:</label><br>
-    <input type="text" id="outputKey" name="outputKey" value="output.png" required><br><br>
+    <label for="outputKey">Output Image:</label>
+    <input type="text" id="outputKey" name="outputKey" value="output.png" required>
 
     <input type="button" value="Submit" onclick="submitForm()">
 </form>
@@ -31,7 +94,6 @@
 <script>
     function submitForm() {
         const inputUrl = document.getElementById('input_url').value;
-        const accessKeyId = document.getElementById('accessKeyId').value;
         const secretAccessKey = document.getElementById('secretAccessKey').value;
         const apiKey = document.getElementById('apiKey').value;
         const outputKey = document.getElementById('outputKey').value;
@@ -47,7 +109,7 @@
                 "bucket_name": bucketName,
                 "input_key": inputKey,
                 "output_key": outputKey,
-                "aws_access_key_id": accessKeyId,
+                "aws_access_key_id": "accessKey1",
                 "aws_secret_access_key": secretAccessKey,
                 "endpoint": "http://demo.assistos.net:8020",
             }
