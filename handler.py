@@ -8,7 +8,6 @@ import io
 import os
 import runpod
 
-
 def handler(job):
     job_input = job["input"]  # Access the input from the request.
     bucket_name = job_input["bucket_name"]
@@ -16,13 +15,16 @@ def handler(job):
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
-    aws_session_token = job_input["aws_session_token"]
-    region_name = job_input["region_name"]
+    endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
+
+    # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
-    os.environ['AWS_SESSION_TOKEN'] = aws_session_token
-    os.environ['AWS_DEFAULT_REGION'] = region_name
-    s3 = boto3.client('s3')
+    os.environ['AWS_DEFAULT_REGION'] = "us-east-1"
+
+    # Initialize S3 client with a custom endpoint if provided
+    s3 = boto3.client('s3', endpoint_url=endpoint)
+
     # Load the image from S3
     response = s3.get_object(Bucket=bucket_name, Key=input_key)
     image_data = response['Body'].read()
@@ -60,12 +62,10 @@ def handler(job):
     buffer.seek(0)
     s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
 
-    # return output bucket and key
-    s3_client = boto3.client('s3')
-    response = s3_client.generate_presigned_url('get_object',
-                                                Params={'Bucket': bucket_name,
-                                                        'Key': output_key}, ExpiresIn=3600)
+    # Return presigned URL for the output image
+    response = s3.generate_presigned_url('get_object',
+                                         Params={'Bucket': bucket_name,
+                                                 'Key': output_key}, ExpiresIn=3600)
     return response
-
 
 runpod.serverless.start({"handler": handler})  # Required.
