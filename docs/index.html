@@ -17,6 +17,9 @@
     <label for="secretAccessKey">Secret Access Key:</label><br>
     <input type="password" id="secretAccessKey" name="secretAccessKey" value="" required><br><br>
 
+    <label for="apiKey">API Key:</label><br>
+    <input type="password" id="apiKey" name="apiKey" value="" required><br><br>
+
     <label for="outputKey">Output Image:</label><br>
     <input type="text" id="outputKey" name="outputKey" value="output.png" required><br><br>
 
@@ -30,6 +33,7 @@
         const inputUrl = document.getElementById('input_url').value;
         const accessKeyId = document.getElementById('accessKeyId').value;
         const secretAccessKey = document.getElementById('secretAccessKey').value;
+        const apiKey = document.getElementById('apiKey').value;
         const outputKey = document.getElementById('outputKey').value;
 
         // Extract bucket_name and input_key from input_url
@@ -53,14 +57,15 @@
         fetch('https://api.runpod.ai/v2/ugzsvcz1cl2h1a/run', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(requestBody)
         })
             .then(response => response.json())
             .then(data => {
                 console.log('Request ID:', data.id);
-                checkStatus(data.id);
+                checkStatus(data.id, apiKey);
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -68,12 +73,16 @@
             });
     }
 
-    function checkStatus(requestId) {
+    function checkStatus(requestId, apiKey) {
         const statusUrl = `https://api.runpod.ai/v2/ugzsvcz1cl2h1a/status/${requestId}`;
 
         // Poll the status endpoint every 5 seconds until the status is "COMPLETED"
         const intervalId = setInterval(() => {
-            fetch(statusUrl)
+            fetch(statusUrl, {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Status:', data.status);
@@ -96,4 +105,3 @@
 </script>
 </body>
 </html>
-
