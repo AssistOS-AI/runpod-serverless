@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Form</title>
+</head>
+<body>
+<h1>Submit Your Details</h1>
+<form id="inputForm">
+    <label for="input_url">Input URL:</label><br>
+    <input type="text" id="input_url" name="input_url" value="http://demo.assistos.net:8020/demo-bucket/titlu.png" required><br><br>
+
+    <label for="accessKeyId">Access Key ID:</label><br>
+    <input type="text" id="accessKeyId" name="accessKeyId" value="" required><br><br>
+
+    <label for="secretAccessKey">Secret Access Key:</label><br>
+    <input type="password" id="secretAccessKey" name="secretAccessKey" value="" required><br><br>
+
+    <label for="outputKey">Output Image:</label><br>
+    <input type="text" id="outputKey" name="outputKey" value="output.png" required><br><br>
+
+    <input type="button" value="Submit" onclick="submitForm()">
+</form>
+
+<div id="result" style="margin-top: 20px;"></div>
+
+<script>
+    function submitForm() {
+        const inputUrl = document.getElementById('input_url').value;
+        const accessKeyId = document.getElementById('accessKeyId').value;
+        const secretAccessKey = document.getElementById('secretAccessKey').value;
+        const outputKey = document.getElementById('outputKey').value;
+
+        // Extract bucket_name and input_key from input_url
+        const urlParts = inputUrl.split('/');
+        const bucketName = urlParts[urlParts.length - 2];
+        const inputKey = urlParts[urlParts.length - 1];
+
+        // Prepare the request body
+        const requestBody = {
+            "input": {
+                "bucket_name": bucketName,
+                "input_key": inputKey,
+                "output_key": outputKey,
+                "aws_access_key_id": accessKeyId,
+                "aws_secret_access_key": secretAccessKey,
+                "endpoint": "http://demo.assistos.net:8020",
+            }
+        };
+
+        // Make the POST request to the API
+        fetch('https://api.runpod.ai/v2/ugzsvcz1cl2h1a/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Request ID:', data.id);
+                checkStatus(data.id);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('Request failed: ' + error);
+            });
+    }
+
+    function checkStatus(requestId) {
+        const statusUrl = `https://api.runpod.ai/v2/ugzsvcz1cl2h1a/status/${requestId}`;
+
+        // Poll the status endpoint every 5 seconds until the status is "COMPLETED"
+        const intervalId = setInterval(() => {
+            fetch(statusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Status:', data.status);
+                    if (data.status === 'COMPLETED') {
+                        clearInterval(intervalId); // Stop polling
+                        displayResult(data.output); // Display the output link
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    clearInterval(intervalId); // Stop polling on error
+                });
+        }, 5000); // Poll every 5 seconds
+    }
+
+    function displayResult(outputUrl) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
+    }
+</script>
+</body>
+</html>
 
