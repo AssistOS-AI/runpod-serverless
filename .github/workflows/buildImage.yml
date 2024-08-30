@@ -40,7 +40,7 @@ jobs:
           # Convert the repo_name to lowercase
           NORMALIZED_REPO_NAME=$(echo "${{ github.event.inputs.repo_name }}" | tr '[:upper:]' '[:lower:]')
           
-          MODEL_DIR="./models/$NORMALIZED_REPO_NAME"
+          MODEL_DIR="./models/${{ github.event.inputs.repo_name }}"
           if [ ! -d "$MODEL_DIR" ]; then
             echo "The specified repository does not exist: $MODEL_DIR"
             exit 1
