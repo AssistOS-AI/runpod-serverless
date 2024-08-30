@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.NORMALIZED_REPO_NAME }}:${{ github.event.inputs.image_tag }} -f ${{ env.MODEL_DIR }}/Dockerfile ${{ env.MODEL_DIR }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.NORMALIZED_REPO_NAME }}:${{ github.event.inputs.image_tag }} -f ${{ env.MODEL_DIR }}/Dockerfile .
 
       - name: Push Docker image
         run: |
