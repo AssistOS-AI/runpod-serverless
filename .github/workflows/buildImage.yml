@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Validate repo_name input
+      - name: Validate and normalize repo_name input
         id: validate_repo
         run: |
           if [ -z "${{ github.event.inputs.repo_name }}" ]; then
@@ -37,18 +37,22 @@ jobs:
             exit 1
           fi
           
-          MODEL_DIR="./models/${{ github.event.inputs.repo_name }}"
+          # Convert the repo_name to lowercase
+          NORMALIZED_REPO_NAME=$(echo "${{ github.event.inputs.repo_name }}" | tr '[:upper:]' '[:lower:]')
+          
+          MODEL_DIR="./models/$NORMALIZED_REPO_NAME"
           if [ ! -d "$MODEL_DIR" ]; then
             echo "The specified repository does not exist: $MODEL_DIR"
             exit 1
           fi
           
           echo "MODEL_DIR=$MODEL_DIR" >> $GITHUB_ENV
+          echo "NORMALIZED_REPO_NAME=$NORMALIZED_REPO_NAME" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.repo_name }}:${{ github.event.inputs.image_tag }} ${{ env.MODEL_DIR }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.NORMALIZED_REPO_NAME }}:${{ github.event.inputs.image_tag }} ${{ env.MODEL_DIR }}
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ github.event.inputs.repo_name }}:${{ github.event.inputs.image_tag }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.NORMALIZED_REPO_NAME }}:${{ github.event.inputs.image_tag }}
