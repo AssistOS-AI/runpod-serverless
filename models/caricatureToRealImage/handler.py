@@ -48,7 +48,7 @@ def handler(job):
 
     # Load ControlNet and Stable Diffusion pipeline
     controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
-    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2-inpainting", controlnet=controlnet,
+    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2", controlnet=controlnet,
                                                              safety_checker=None, torch_dtype=torch.float16)
     pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.enable_model_cpu_offload()
