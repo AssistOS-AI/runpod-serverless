@@ -15,12 +15,13 @@ def handler(job):
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
+    aws_region = job_input["aws_region"]
     endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
 
     # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
-    os.environ['AWS_DEFAULT_REGION'] = "us-east-1"
+    os.environ['AWS_DEFAULT_REGION'] = aws_region
 
     # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
