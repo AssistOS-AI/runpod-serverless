@@ -8,21 +8,22 @@ import io
 import os
 import runpod
 
+
 def handler(job):
-    job_input = job["input"]  # Access the input from the request.
+    job_input = job["input"]
     bucket_name = job_input["bucket_name"]
     input_key = job_input["input_key"]
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
-    endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
+    endpoint = job_input.get("endpoint", None)
+    prompt = job_input.get("prompt", "A beautiful painting of a bird")  # Default prompt
 
     # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
     os.environ['AWS_DEFAULT_REGION'] = "us-east-1"
 
-    # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
     # Load the image from S3
@@ -42,22 +43,18 @@ def handler(job):
     high_threshold = 200
     edges = cv2.Canny(image_gray, low_threshold, high_threshold)
     edges = np.stack([edges] * 3, axis=-1)
-
-    # Convert edges to PIL image
     image_pil = Image.fromarray(edges)
 
-    # Resize image to match model input size
-    image_pil = image_pil.resize((512, 512))
-
-    # Load ControlNet and Stable Diffusion pipeline
+    # Load ControlNet and Stable Diffusion pipeline (using stable-diffusion-2-1)
     controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
-    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2", controlnet=controlnet,
+    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2-1",
+                                                             controlnet=controlnet,
                                                              safety_checker=None, torch_dtype=torch.float16)
     pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
     pipe.enable_model_cpu_offload()
 
     # Generate output image
-    output_image = pipe("bird", image_pil, num_inference_steps=20).images[0]
+    output_image = pipe(prompt, image_pil, num_inference_steps=20).images[0]
 
     # Save the output image back to S3
     buffer = io.BytesIO()
@@ -65,10 +62,10 @@ def handler(job):
     buffer.seek(0)
     s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
 
-    # Return presigned URL for the output image
     response = s3.generate_presigned_url('get_object',
-                                         Params={'Bucket': bucket_name,
-                                                 'Key': output_key}, ExpiresIn=3600)
+                                         Params={'Bucket': bucket_name, 'Key': output_key},
+                                         ExpiresIn=3600)
     return response
 
-runpod.serverless.start({"handler": handler})  # Required.
+
+runpod.serverless.start({"handler": handler})
