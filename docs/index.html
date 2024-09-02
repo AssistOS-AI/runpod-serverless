@@ -69,6 +69,26 @@
             font-size: 1em;
             color: #555;
         }
+
+        #loadingSpinner {
+            width: 35px;
+            padding: 8px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #25b09b;
+            --_m: conic-gradient(#0000 10%, #000),
+            linear-gradient(#000 0 0) content-box;
+            -webkit-mask: var(--_m);
+            mask: var(--_m);
+            -webkit-mask-composite: source-out;
+            mask-composite: subtract;
+            animation: l3 1s infinite linear;
+        }
+        @keyframes l3 {
+            to {
+                transform: rotate(1turn)
+            }
+        }
     </style>
 </head>
 <body>
@@ -76,10 +96,10 @@
     <label for="input_url">Input URL:</label>
     <input type="text" id="input_url" name="input_url" value="http://demo.assistos.net:8020/demo-bucket/titlu.png" required>
 
-    <label for="secretAccessKey">Secret Access Key:</label>
+    <label for="secretAccessKey">S3 Secret Key:</label>
     <input type="password" id="secretAccessKey" name="secretAccessKey" value="" required>
 
-    <label for="apiKey">API Key:</label>
+    <label for="apiKey">RunPOD API Key:</label>
     <input type="password" id="apiKey" name="apiKey" value="" required>
 
     <label for="outputKey">Output Image:</label>
@@ -87,6 +107,8 @@
 
     <input type="button" value="Submit" onclick="submitForm()">
 </form>
+
+<div id="loadingSpinner" style="display: none;"></div>
 
 <div id="result" style="margin-top: 20px;"></div>
 
@@ -96,6 +118,11 @@
         const secretAccessKey = document.getElementById('secretAccessKey').value;
         const apiKey = document.getElementById('apiKey').value;
         const outputKey = document.getElementById('outputKey').value;
+        const form = document.getElementById('inputForm');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        form.style.display = 'none';
+        loadingSpinner.style.display = '';
 
         // Extract bucket_name and input_key from input_url
         const urlParts = inputUrl.split('/');
@@ -146,6 +173,12 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    const loadingSpinner = document.getElementById('loadingSpinner');
+                    const form = document.getElementById('inputForm');
+
+                    loadingSpinner.style.display = 'none';
+                    form.style.display = '';
+
                     console.log('Status:', data.status);
                     if (data.status === 'COMPLETED') {
                         clearInterval(intervalId); // Stop polling
