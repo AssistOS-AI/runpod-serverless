@@ -46,6 +46,9 @@ def handler(job):
     # Convert edges to PIL image
     image_pil = Image.fromarray(edges)
 
+    # Resize image to match model input size
+    image_pil = image_pil.resize((512, 512))
+
     # Load ControlNet and Stable Diffusion pipeline
     controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
     pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2", controlnet=controlnet,
