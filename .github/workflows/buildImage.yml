@@ -26,8 +26,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: "darkk360"
-          password: "@LoliDark360"
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Validate and normalize repo_name input
         id: validate_repo
