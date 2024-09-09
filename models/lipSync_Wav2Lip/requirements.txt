@@ -5,3 +5,8 @@ runpod
 diffusers[torch]
 transformers
 boto3
+moviepy
+librosa
+torch
+torchvision
+ffmpeg-python
