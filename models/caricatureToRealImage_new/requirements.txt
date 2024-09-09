@@ -5,3 +5,6 @@ runpod
 diffusers[torch]
 transformers
 boto3
+io
+os
+cv2
