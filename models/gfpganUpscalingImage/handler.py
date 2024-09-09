@@ -57,7 +57,7 @@ def handler(job):
     _, _, output = face_enhancer.enhance(image, has_aligned=False, only_center_face=False, paste_back=True)
 
     # Save the output image to a buffer
-    _, buffer = cv2.imencode('.png', output)
+    _, buffer = cv2.imencode('input.png', output)
     buffer = io.BytesIO(buffer)
 
     # Save the output image back to S3
