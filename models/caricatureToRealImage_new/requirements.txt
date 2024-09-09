@@ -5,6 +5,6 @@ runpod
 diffusers[torch]
 transformers
 boto3
-io
-os
-cv2
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117 
+accelerate 
+safetensors
