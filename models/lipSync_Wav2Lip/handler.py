@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
-from PIL import Image
-from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
 import torch
 import boto3
 import io
 import os
 import runpod
+from moviepy.editor import VideoFileClip
+from Wav2Lip.models import Wav2Lip
+from Wav2Lip.utils import load_model, preprocess_mel, sync_mouth
+import librosa
+import subprocess
 
 def handler(job):
     job_input = job["input"]  # Access the input from the request.
     bucket_name = job_input["bucket_name"]
-    input_key = job_input["input_key"]
+    video_input_key = job_input["video_input_key"]
+    audio_input_key = job_input["audio_input_key"]
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
@@ -26,44 +30,50 @@ def handler(job):
     # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
-    # Load the image from S3
-    response = s3.get_object(Bucket=bucket_name, Key=input_key)
-    image_data = response['Body'].read()
-    image = Image.open(io.BytesIO(image_data))
-    image = np.array(image)
+    # Load the video and audio from S3
+    video_response = s3.get_object(Bucket=bucket_name, Key=video_input_key)
+    audio_response = s3.get_object(Bucket=bucket_name, Key=audio_input_key)
 
-    # Convert image to grayscale if necessary
-    if image.ndim == 3 and image.shape[2] == 3:
-        image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    else:
-        image_gray = image
+    video_data = video_response['Body'].read()
+    audio_data = audio_response['Body'].read()
 
-    # Apply Canny edge detection
-    low_threshold = 100
-    high_threshold = 200
-    edges = cv2.Canny(image_gray, low_threshold, high_threshold)
-    edges = np.stack([edges] * 3, axis=-1)
+    with open("/tmp/input_video.mp4", "wb") as f:
+        f.write(video_data)
 
-    # Convert edges to PIL image
-    image_pil = Image.fromarray(edges)
+    with open("/tmp/input_audio.wav", "wb") as f:
+        f.write(audio_data)
 
-    # Load ControlNet and Stable Diffusion pipeline
-    controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
-    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2", controlnet=controlnet,
-                                                             safety_checker=None, torch_dtype=torch.float16)
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-    pipe.enable_model_cpu_offload()
+    # Load the Wav2Lip model
+    model = load_model('Wav2Lip/wav2lip.pth')
+    model = model.to('cuda').eval()
 
-    # Generate output image
-    output_image = pipe("bird", image_pil, num_inference_steps=20).images[0]
+    # Load video and audio files
+    video_clip = VideoFileClip("/tmp/input_video.mp4")
+    audio_clip, sample_rate = librosa.load("/tmp/input_audio.wav", sr=16000)
 
-    # Save the output image back to S3
-    buffer = io.BytesIO()
-    output_image.save(buffer, format="PNG")
-    buffer.seek(0)
-    s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
+    # Process frames and synchronize lip movements
+    frames = [frame for frame in video_clip.iter_frames()]
+    mel_spectrogram = preprocess_mel(audio_clip, sample_rate)
 
-    # Return presigned URL for the output image
+    synced_frames = sync_mouth(frames, mel_spectrogram, model)
+
+    # Convert frames back to video
+    height, width, _ = synced_frames[0].shape
+    out = cv2.VideoWriter('/tmp/output_video.mp4', cv2.VideoWriter_fourcc(*'mp4v'), video_clip.fps, (width, height))
+
+    for frame in synced_frames:
+        out.write(frame)
+
+    out.release()
+
+    # Combine audio and video using ffmpeg
+    subprocess.run(['ffmpeg', '-y', '-i', '/tmp/output_video.mp4', '-i', '/tmp/input_audio.wav', '-c:v', 'copy', '-c:a', 'aac', '/tmp/final_output.mp4'])
+
+    # Save the final video to S3
+    with open("/tmp/final_output.mp4", "rb") as f:
+        s3.put_object(Bucket=bucket_name, Key=output_key, Body=f, ContentType='video/mp4')
+
+    # Return presigned URL for the output video
     response = s3.generate_presigned_url('get_object',
                                          Params={'Bucket': bucket_name,
                                                  'Key': output_key}, ExpiresIn=3600)
