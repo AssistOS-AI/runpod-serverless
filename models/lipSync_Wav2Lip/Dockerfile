@@ -11,19 +11,11 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /models
-RUN git clone https://github.com/Rudrabha/Wav2Lip.git
+RUN git clone https://github.com/Rudrabha/Wav2Lip.git /models/Wav2Lip
 
-WORKDIR /models/Wav2Lip
-
-RUN pip install -r /requirements.txt
-
-RUN pip install opencv-python-headless numpy scipy torch librosa
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 ENV PATH="/usr/bin/ffmpeg:${PATH}"
-
-WORKDIR /models/lipSync_Wav2Lip
-
-RUN pip install -r requirements.txt
 
 CMD ["python", "-u", "handler.py"]
