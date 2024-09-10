@@ -43,21 +43,17 @@ def handler(job):
     with open("/tmp/input_audio.wav", "wb") as f:
         f.write(audio_data)
 
-    # Load the Wav2Lip model
     model = load_model('Wav2Lip/wav2lip.pth')
     model = model.to('cuda').eval()
 
-    # Load video and audio files
     video_clip = VideoFileClip("/tmp/input_video.mp4")
     audio_clip, sample_rate = librosa.load("/tmp/input_audio.wav", sr=16000)
 
-    # Process frames and synchronize lip movements
     frames = [frame for frame in video_clip.iter_frames()]
     mel_spectrogram = preprocess_mel(audio_clip, sample_rate)
 
     synced_frames = sync_mouth(frames, mel_spectrogram, model)
 
-    # Convert frames back to video
     height, width, _ = synced_frames[0].shape
     out = cv2.VideoWriter('/tmp/output_video.mp4', cv2.VideoWriter_fourcc(*'mp4v'), video_clip.fps, (width, height))
 
@@ -66,14 +62,11 @@ def handler(job):
 
     out.release()
 
-    # Combine audio and video using ffmpeg
     subprocess.run(['ffmpeg', '-y', '-i', '/tmp/output_video.mp4', '-i', '/tmp/input_audio.wav', '-c:v', 'copy', '-c:a', 'aac', '/tmp/final_output.mp4'])
 
-    # Save the final video to S3
     with open("/tmp/final_output.mp4", "rb") as f:
         s3.put_object(Bucket=bucket_name, Key=output_key, Body=f, ContentType='video/mp4')
 
-    # Return presigned URL for the output video
     response = s3.generate_presigned_url('get_object',
                                          Params={'Bucket': bucket_name,
                                                  'Key': output_key}, ExpiresIn=3600)
