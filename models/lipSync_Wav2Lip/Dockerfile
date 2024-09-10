@@ -1,6 +1,5 @@
 FROM python:3.11.1-buster
 
-RUN apt-get update 
 
 WORKDIR /
 
