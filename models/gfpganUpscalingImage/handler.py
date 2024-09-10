@@ -43,7 +43,7 @@ def handler(job):
     image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
 
     # Paths for the model
-    gfpgan_model_url = 'https://github.com/TencentARC/GFPGAN/releases/download/v1.4.0/GFPGANv1.4.pth'
+    gfpgan_model_url = 'https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth'
     gfpgan_model_path = 'GFPGANv1.4.pth'
 
     # Download the GFPGAN model if it doesn't exist
