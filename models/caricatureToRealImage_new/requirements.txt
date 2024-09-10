@@ -7,3 +7,4 @@ transformers
 boto3
 accelerate
 safetensors
+controlnet_aux==0.0.7 
