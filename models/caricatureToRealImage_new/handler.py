@@ -39,7 +39,12 @@ def handler(job):
     image = Image.fromarray(image)
 
     # Initialize ControlNet and Stable Diffusion XL pipeline
-    controlnet = ControlNetModel.from_pretrained("TheMistoAI/MistoLine", torch_dtype=torch.float16, use_safetensors=True)
+controlnet = ControlNetModel.from_pretrained(
+    "TheMistoAI/MistoLine",
+    torch_dtype=torch.float16,
+    filename="diffusion_pytorch_model.fp16.safetensors",
+    use_safetensors=True
+)
     vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
     pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0",
