@@ -4,7 +4,7 @@ import torch
 import boto3
 import io
 import os
-import requests  # To download the model from GitHub
+import requests
 import runpod
 from moviepy.editor import VideoFileClip
 from Wav2Lip.models import Wav2Lip
@@ -16,10 +16,13 @@ import subprocess
 MODEL_URL = "https://github.com/Rudrabha/Wav2Lip/releases/download/v1.0/wav2lip.pth"
 
 def download_model(url, save_path):
-    # Download model weights from the provided URL
-    response = requests.get(url)
-    with open(save_path, 'wb') as f:
-        f.write(response.content)
+    if not os.path.exists(save_path):
+        response = requests.get(url, stream=True)
+        if response.status_code == 200:
+            with open(save_path, 'wb') as f:
+                f.write(response.content)
+        else:
+            raise Exception(f"Failed to download model. Status code: {response.status_code}")
 
 def handler(job):
     job_input = job["input"]  # Access the input from the request.
