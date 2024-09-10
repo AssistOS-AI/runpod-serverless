@@ -6,7 +6,7 @@ WORKDIR /
 COPY . /
 
 # Set the working directory to the specific model directory
-WORKDIR /models/caricatureToRealImage
+WORKDIR /models/lipSync_Wav2Lip
 
 # Install Python dependencies
 RUN pip install -r requirements.txt
