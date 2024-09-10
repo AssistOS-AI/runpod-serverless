@@ -1,10 +1,10 @@
 import os
 import cv2
-import torch
 import numpy as np
 import io
 import requests
 import runpod
+import boto3
 from gfpgan.utils import GFPGANer
 
 # Helper function to download the GFPGAN model file
