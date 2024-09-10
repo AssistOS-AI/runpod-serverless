@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y \
 
 RUN git clone https://github.com/Rudrabha/Wav2Lip.git /models/Wav2Lip
 
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+WORKDIR /models/lipSync_Wav2Lip
+
+RUN pip install -r requirements.txt
+
 
 ENV PATH="/usr/bin/ffmpeg:${PATH}"
 
