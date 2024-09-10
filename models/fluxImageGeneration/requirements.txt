@@ -1,0 +1,7 @@
+opencv-python-headless
+numpy
+Pillow
+runpod
+diffusers[torch]
+transformers
+boto3
