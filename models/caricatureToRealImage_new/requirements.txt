@@ -15,3 +15,5 @@ tqdm
 lmdb
 pyyaml
 yapf
+xformers
+
