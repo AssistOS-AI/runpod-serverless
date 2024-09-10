@@ -5,6 +5,5 @@ runpod
 diffusers[torch]
 transformers
 boto3
-torch
 accelerate
 safetensors
