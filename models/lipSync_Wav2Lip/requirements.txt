@@ -10,3 +10,6 @@ librosa
 torch
 torchvision
 ffmpeg-python
+scipy
+audioread
+git+https://github.com/Rudrabha/Wav2Lip.git
