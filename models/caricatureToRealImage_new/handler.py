@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
 from PIL import Image
-from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
 import torch
 import boto3
 import io
 import os
+from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel, AutoencoderKL
 import runpod
 
 def handler(job):
@@ -32,30 +32,33 @@ def handler(job):
     image = Image.open(io.BytesIO(image_data))
     image = np.array(image)
 
-    # Convert image to grayscale if necessary
-    if image.ndim == 3 and image.shape[2] == 3:
-        image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    else:
-        image_gray = image
+    # Convert image to grayscale and then apply Canny edge detection
+    image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if image.ndim == 3 else image
+    edges = cv2.Canny(image_gray, 100, 200)
+    image = np.stack([edges] * 3, axis=-1)
+    image = Image.fromarray(image)
 
-    # Apply Canny edge detection
-    low_threshold = 100
-    high_threshold = 200
-    edges = cv2.Canny(image_gray, low_threshold, high_threshold)
-    edges = np.stack([edges] * 3, axis=-1)
-
-    # Convert edges to PIL image
-    image_pil = Image.fromarray(edges)
-
-    # Load ControlNet and Stable Diffusion pipeline
-    controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
-    pipe = StableDiffusionControlNetPipeline.from_pretrained("stabilityai/stable-diffusion-2", controlnet=controlnet,
-                                                             safety_checker=None, torch_dtype=torch.float16)
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+    # Initialize ControlNet and Stable Diffusion XL pipeline
+    controlnet = ControlNetModel.from_pretrained("TheMistoAI/MistoLine", torch_dtype=torch.float16)
+    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+    pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
+        "stabilityai/stable-diffusion-xl-base-1.0",
+        controlnet=controlnet,
+        vae=vae,
+        torch_dtype=torch.float16
+    )
     pipe.enable_model_cpu_offload()
 
-    # Generate output image
-    output_image = pipe("bird", image_pil, num_inference_steps=20).images[0]
+    # Generate output image using the pipeline
+    prompt = "aerial view, a futuristic research complex in a bright foggy jungle, hard lighting"
+    negative_prompt = 'low quality, bad quality, sketches'
+    controlnet_conditioning_scale = 0.5
+    output_image = pipe(
+        prompt,
+        negative_prompt=negative_prompt,
+        image=image,
+        controlnet_conditioning_scale=controlnet_conditioning_scale
+    ).images[0]
 
     # Save the output image back to S3
     buffer = io.BytesIO()
@@ -65,8 +68,8 @@ def handler(job):
 
     # Return presigned URL for the output image
     response = s3.generate_presigned_url('get_object',
-                                         Params={'Bucket': bucket_name,
-                                                 'Key': output_key}, ExpiresIn=3600)
+                                         Params={'Bucket': bucket_name, 'Key': output_key},
+                                         ExpiresIn=3600)
     return response
 
 runpod.serverless.start({"handler": handler})  # Required.
