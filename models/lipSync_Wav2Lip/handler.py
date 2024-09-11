@@ -1,31 +1,51 @@
+import os
+import boto3
+import torch
 import cv2
 import numpy as np
-import torch
-import boto3
-import io
-import os
-import requests
-import runpod
-from moviepy.editor import VideoFileClip
-from Wav2Lip.models import Wav2Lip
-from Wav2Lip.utils import load_model, preprocess_mel, sync_mouth
-import librosa
 import subprocess
+import runpod
+import requests
+import librosa
+from moviepy.editor import VideoFileClip
+import tempfile
 
-# Wav2Lip GitHub URL for model weights
-MODEL_URL = "https://github.com/Rudrabha/Wav2Lip/releases/download/v1.0/wav2lip.pth"
+wav2lip_model_url = 'https://iiitaphyd-my.sharepoint.com/:u:/g/personal/radrabha_m_research_iiit_ac_in/Eb3LEzbfuKlJiR600lQWRxgBIY27JZg80f7V9jtMfbNDaQ?e=TBFBVW'
+wav2lip_model_path = 'wav2lip.pth'
 
 def download_model(url, save_path):
     if not os.path.exists(save_path):
-        response = requests.get(url, stream=True)
-        if response.status_code == 200:
-            with open(save_path, 'wb') as f:
-                f.write(response.content)
-        else:
-            raise Exception(f"Failed to download model. Status code: {response.status_code}")
+        print(f"Downloading Wav2Lip model to {save_path}...")
+        response = requests.get(url)
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+        print("Download completed.")
+    else:
+        print(f"Model already exists at {save_path}.")
+
+download_model(wav2lip_model_url, wav2lip_model_path)
+
+def load_model_from_pth(path):
+    model = Wav2Lip()
+    checkpoint = torch.load(path, map_location=torch.device('cpu'))
+    model.load_state_dict(checkpoint['state_dict'])
+    return model.eval()
+
+def preprocess_mel(audio, sample_rate):
+    mel = librosa.feature.melspectrogram(y=audio, sr=sample_rate, n_fft=400, hop_length=160, n_mels=80)
+    mel = np.log(mel + 1e-5)
+    mel = np.expand_dims(mel, axis=0)
+    return mel
+
+def sync_mouth(frames, mel_spectrogram, model):
+    synced_frames = []
+    for frame in frames:
+        synced_frame = model_inference(frame, mel_spectrogram, model)
+        synced_frames.append(synced_frame)
+    return synced_frames
 
 def handler(job):
-    job_input = job["input"]  # Access the input from the request.
+    job_input = job["input"]
     bucket_name = job_input["bucket_name"]
     video_input_key = job_input["video_input_key"]
     audio_input_key = job_input["audio_input_key"]
@@ -33,67 +53,58 @@ def handler(job):
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
+    endpoint = job_input.get("endpoint", None)
 
-    # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
     os.environ['AWS_DEFAULT_REGION'] = aws_region
 
-    # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
-    # Load the video and audio from S3
-    video_response = s3.get_object(Bucket=bucket_name, Key=video_input_key)
-    audio_response = s3.get_object(Bucket=bucket_name, Key=audio_input_key)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        video_path = os.path.join(tmpdir, "input_video.mp4")
+        audio_path = os.path.join(tmpdir, "input_audio.wav")
+        output_video_path = os.path.join(tmpdir, "output_video.mp4")
+        final_output_path = os.path.join(tmpdir, "final_output.mp4")
 
-    video_data = video_response['Body'].read()
-    audio_data = audio_response['Body'].read()
+        video_response = s3.get_object(Bucket=bucket_name, Key=video_input_key)
+        audio_response = s3.get_object(Bucket=bucket_name, Key=audio_input_key)
 
-    # Save video and audio to temporary files
-    with open("/tmp/input_video.mp4", "wb") as f:
-        f.write(video_data)
+        with open(video_path, "wb") as f:
+            f.write(video_response['Body'].read())
+        with open(audio_path, "wb") as f:
+            f.write(audio_response['Body'].read())
 
-    with open("/tmp/input_audio.wav", "wb") as f:
-        f.write(audio_data)
+        model = load_model_from_pth(wav2lip_model_path)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        model = model.to(device).eval()
 
-    # Download and load Wav2Lip model weights
-    model_weights_path = "/tmp/wav2lip.pth"
-    download_model(MODEL_URL, model_weights_path)
-    
-    model = load_model(model_weights_path)  # Load the downloaded model
-    model = model.to('cuda').eval()
+        video_clip = VideoFileClip(video_path)
+        audio_clip, sample_rate = librosa.load(audio_path, sr=16000)
 
-    # Process video and audio
-    video_clip = VideoFileClip("/tmp/input_video.mp4")
-    audio_clip, sample_rate = librosa.load("/tmp/input_audio.wav", sr=16000)
+        frames = [frame for frame in video_clip.iter_frames()]
+        mel_spectrogram = preprocess_mel(audio_clip, sample_rate)
 
-    frames = [frame for frame in video_clip.iter_frames()]
-    mel_spectrogram = preprocess_mel(audio_clip, sample_rate)
+        synced_frames = sync_mouth(frames, mel_spectrogram, model)
 
-    # Sync video with audio
-    synced_frames = sync_mouth(frames, mel_spectrogram, model)
+        height, width, _ = synced_frames[0].shape
+        out = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), video_clip.fps, (width, height))
 
-    # Write the synced video
-    height, width, _ = synced_frames[0].shape
-    out = cv2.VideoWriter('/tmp/output_video.mp4', cv2.VideoWriter_fourcc(*'mp4v'), video_clip.fps, (width, height))
+        for frame in synced_frames:
+            out.write(frame)
 
-    for frame in synced_frames:
-        out.write(frame)
+        out.release()
 
-    out.release()
+        subprocess.run(['ffmpeg', '-y', '-i', output_video_path, '-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', final_output_path])
 
-    # Merge audio and video using ffmpeg
-    subprocess.run(['ffmpeg', '-y', '-i', '/tmp/output_video.mp4', '-i', '/tmp/input_audio.wav', '-c:v', 'copy', '-c:a', 'aac', '/tmp/final_output.mp4'])
+        with open(final_output_path, "rb") as f:
+            s3.put_object(Bucket=bucket_name, Key=output_key, Body=f, ContentType='video/mp4')
 
-    # Upload the final video to S3
-    with open("/tmp/final_output.mp4", "rb") as f:
-        s3.put_object(Bucket=bucket_name, Key=output_key, Body=f, ContentType='video/mp4')
-
-    # Generate presigned URL for the output video
-    response = s3.generate_presigned_url('get_object',
-                                         Params={'Bucket': bucket_name,
-                                                 'Key': output_key}, ExpiresIn=3600)
+        response = s3.generate_presigned_url('get_object',
+                                             Params={'Bucket': bucket_name,
+                                                     'Key': output_key}, ExpiresIn=3600)
     return response
 
-runpod.serverless.start({"handler": handler})  # Required.
+
+# Start the Runpod serverless handler
+runpod.serverless.start({"handler": handler})
