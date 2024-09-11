@@ -128,7 +128,7 @@ function checkStatus(requestId, apiKey) {
             .then(response => response.json())
             .then(data => {
                 console.log('Status:', data.status);
-
+inputForm
                 if (data.status === 'COMPLETED') {
                     clearInterval(intervalId);
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
@@ -146,6 +146,7 @@ function checkStatus(requestId, apiKey) {
 
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
+    document.getElementById('inputForm').style.display = 'none';
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
     document.getElementById('inputForm').style.display = ''; // Show the form again
 }
