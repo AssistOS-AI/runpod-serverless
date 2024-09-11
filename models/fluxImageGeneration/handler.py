@@ -26,7 +26,7 @@ def handler(job):
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
     # HuggingFace API details
-    API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
+    API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
     headers = {"Authorization": f"Bearer {hf_auth_token}"}
 
     # Send the query to Hugging Face API directly
