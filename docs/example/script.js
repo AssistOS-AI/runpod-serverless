@@ -89,7 +89,7 @@ function submitForm(event) {
         }
     };
 
-    fetch('https://api.runpod.ai/v2/ugzsvcz1cl2h1a/run', {
+    fetch('https://api.runpod.ai/v2/xufpmrxai3j5ee/run', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
-    const statusUrl = `https://api.runpod.ai/v2/ugzsvcz1cl2h1a/status/${requestId}`;
+    const statusUrl = `https://api.runpod.ai/v2/xufpmrxai3j5ee/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
