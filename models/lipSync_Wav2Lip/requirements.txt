@@ -13,4 +13,3 @@ torchvision
 ffmpeg-python
 scipy
 audioread
-Wav2Lip
