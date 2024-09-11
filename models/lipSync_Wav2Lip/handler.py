@@ -12,7 +12,7 @@ import tempfile
 
 # Ensure the Wav2Lip model is correctly imported
 try:
-    from wav2lip.models import Wav2Lip
+    from models import Wav2Lip
 except ImportError as e:
     print(f"Failed to import Wav2Lip: {e}")
 
@@ -47,6 +47,33 @@ def preprocess_mel(audio, sample_rate):
     mel = np.expand_dims(mel, axis=0)
     return mel
 
+def model_inference(frames, mel_spectrogram, model, device='cpu'):
+    synced_frames = []
+
+    # Send model to device (GPU or CPU)
+    model = model.to(device)
+
+    # Process each frame (batch inference is possible but keeping it simple here)
+    for frame in frames:
+        # Resize and normalize the frame
+        frame = cv2.resize(frame, (96, 96))  # Wav2Lip uses 96x96 frames
+        frame = np.float32(frame) / 255.0    # Normalize frame
+        frame = np.transpose(frame, (2, 0, 1))  # Convert to channel-first (C, H, W)
+        frame = torch.FloatTensor(frame).unsqueeze(0).to(device)  # Add batch dimension and send to device
+
+        # Convert mel-spectrogram to torch tensor and send to device
+        mel = torch.FloatTensor(mel_spectrogram).unsqueeze(0).to(device)
+
+        # Run the frame and mel-spectrogram through the Wav2Lip model
+        with torch.no_grad():
+            output = model(mel, frame)
+
+        # Post-process the output frame and convert it back to image format
+        output = output.squeeze().cpu().numpy().transpose(1, 2, 0)
+        output = np.clip(output * 255, 0, 255).astype(np.uint8)
+        synced_frames.append(output)
+
+    return synced_frames
 # Function to sync the mouth movements in the video frames using the model
 def sync_mouth(frames, mel_spectrogram, model):
     synced_frames = []
