@@ -30,6 +30,12 @@ label {
     display: block;
 }
 
+textarea {
+    width: 98%;
+    height: 100px;
+    resize: vertical;
+}
+
 input[type="text"], input[type="password"], input[type="file"] {
     width: 100%;
     padding: 10px;
