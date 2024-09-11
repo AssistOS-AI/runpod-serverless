@@ -85,7 +85,7 @@ function submitForm(event) {
             "aws_access_key_id": accessKeyId,
             "aws_secret_access_key": secretAccessKey,
             "endpoint": endpoint,
-            "region": "fra1"
+            "aws_region": "fra1"
         }
     };
 
