@@ -128,7 +128,6 @@ function checkStatus(requestId, apiKey) {
             .then(response => response.json())
             .then(data => {
                 console.log('Status:', data.status);
-inputForm
                 if (data.status === 'COMPLETED') {
                     clearInterval(intervalId);
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
