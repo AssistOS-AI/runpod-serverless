@@ -9,70 +9,18 @@ function generateRandomString(length) {
     return base64UrlString;
 }
 
-function uploadFile() {
-    const accessKeyId = document.getElementById('accessKeyId').value;
-    const secretAccessKey = document.getElementById('secretAccessKey').value;
-    const bucketName = 'assistos-demo-bucket';
-    const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    const fileInput = document.getElementById('fileInput');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-
-    if (!fileInput.files.length) {
-        alert('Please select a file to upload.');
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const fileExtension = file.name.split('.').pop(); // Extract the file extension
-    randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-
-    const s3 = new AWS.S3({
-        endpoint: new AWS.Endpoint(endpoint),
-        credentials: new AWS.Credentials({
-            accessKeyId: accessKeyId,
-            secretAccessKey: secretAccessKey
-        }),
-        s3ForcePathStyle: true,
-    });
-
-    const params = {
-        Bucket: bucketName,
-        Key: randomKey,
-        Body: file,
-        ACL: 'public-read'
-    };
-
-    loadingSpinner.style.display = '';
-
-    s3.upload(params, function(err, data) {
-        loadingSpinner.style.display = 'none';
-
-        if (err) {
-            console.error('Upload Error:', err);
-            alert('File upload failed: ' + err.message);
-        } else {
-            console.log('Upload Success:', data);
-            uploadedFileUrl = data.Location;
-            alert('File uploaded successfully!');
-        }
-    });
-}
-
 function submitForm(event) {
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
+    const hf_auth_token = document.getElementById('authApiKey').value;
+    const prompt = document.getElementById('prompt').value;
     event.preventDefault();
 
     const apiKey = document.getElementById('apiKey').value;
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
-
-    if (!uploadedFileUrl) {
-        alert('Please upload a file first.');
-        return;
-    }
 
     form.style.display = 'none';
     loadingSpinner.style.display = '';
@@ -85,7 +33,9 @@ function submitForm(event) {
             "aws_access_key_id": accessKeyId,
             "aws_secret_access_key": secretAccessKey,
             "endpoint": endpoint,
-            "aws_region": "fra1"
+            "aws_region": "fra1",
+            "hf_auth_token": hf_auth_token,
+            "hf_prompt": prompt
         }
     };
 
