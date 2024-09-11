@@ -17,9 +17,15 @@
     <label for="apiKey">RunPOD API Key:</label>
     <input type="password" id="apiKey" name="apiKey" value="" required>
 
-    <label for="fileInput">Choose File:</label>
+    <label for="">HuggingFace API Key:</label>
+    <input type="password" id="authApiKey" name="authApiKey" value="" required>
+
+    <label for="">Prompt</label>
+    <input type="text" id="prompt" name="prompt" value="" required>
+
+    <!-- <label for="fileInput">Choose File:</label>
     <input type="file" id="fileInput" name="fileInput" required>
-    <input type="button" value="Upload" onclick="uploadFile()">
+    <input type="button" value="Upload" onclick="uploadFile()"> -->
 
     <input type="submit" value="Submit" onclick="submitForm(event)">
 </form>
