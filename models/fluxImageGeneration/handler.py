@@ -13,8 +13,8 @@ def handler(job):
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    hf_prompt = job_input["hf_prompt"]  # Text prompt for hugging face model
     hf_auth_token = job_input["hf_auth_token"]  # API token for hugging face model
+    hf_prompt = job_input["hf_prompt"]  # Text prompt for hugging face model
     endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
 
     # Set AWS credentials and region
