@@ -12,7 +12,7 @@ import tempfile
 
 # Ensure the Wav2Lip model is correctly imported
 try:
-    from models import Wav2Lip
+    from Wav2Lip.models.wav2lip import Wav2Lip
 except ImportError as e:
     print(f"Failed to import Wav2Lip: {e}")
 
