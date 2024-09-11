@@ -11,5 +11,10 @@ requests
 torch
 torchvision
 ffmpeg-python
-scipy
 audioread
+realesrgan>=0.2.5
+scipy
+tqdm
+lmdb
+pyyaml
+yapf

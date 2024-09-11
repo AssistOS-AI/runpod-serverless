@@ -2,6 +2,7 @@ FROM python:3.11.1-buster
 
 # Install git and other dependencies
 RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0
 
 # Set the working directory to root
 WORKDIR /
