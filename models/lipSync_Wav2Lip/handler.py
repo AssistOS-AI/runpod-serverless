@@ -24,9 +24,11 @@ wav2lip_model_path = 'wav2lip.pth'
 def download_model(url, save_path):
     if not os.path.exists(save_path):
         print(f"Downloading Wav2Lip model to {save_path}...")
-        response = requests.get(url)
+        response = requests.get(url, stream=True)
         with open(save_path, 'wb') as f:
-            f.write(response.content)
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
         print("Download completed.")
     else:
         print(f"Model already exists at {save_path}.")
