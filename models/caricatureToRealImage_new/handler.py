@@ -60,7 +60,7 @@ def handler(job):
     pipe.enable_xformers_memory_efficient_attention()
 
     # Prompt și generare imagine
-    prompt = "a robot, mount fuji in the background, 4k photo, highly detailed"
+    prompt = "4k photo, highly detailed"
     negative_prompt = "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured"
 
     gen_images = pipe(
