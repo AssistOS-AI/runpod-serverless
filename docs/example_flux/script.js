@@ -1,4 +1,3 @@
-let uploadedFileUrl = '';
 let randomKey = '';
 
 // Function to generate a random string
@@ -8,6 +7,24 @@ function generateRandomString(length) {
     const base64UrlString = base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return base64UrlString;
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Retrieve data from local storage and populate the form fields
+    const formFields = ["accessKeyId", "secretAccessKey", "apiKey", "authApiKey", "prompt"];
+    formFields.forEach(field => {
+        const value = localStorage.getItem(field);
+        if (value) {
+            document.getElementById(field).value = value;
+        }
+    });
+
+    // Save form data to local storage on input change
+    formFields.forEach(field => {
+        document.getElementById(field).addEventListener("input", function() {
+            localStorage.setItem(field, this.value);
+        });
+    });
+});
 
 function submitForm(event) {
     const accessKeyId = document.getElementById('accessKeyId').value;
