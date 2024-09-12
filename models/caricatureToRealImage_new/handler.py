@@ -18,7 +18,7 @@ def handler(job):
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
     endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
-     prompt = job_input.get("prompt", "4k photo, highly detailed")
+    prompt = job_input.get("prompt", "4k photo, highly detailed")
     negative_prompt = job_input.get("negative_prompt", "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured")
     # Set AWS credentials și regiunea
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
@@ -81,4 +81,5 @@ def handler(job):
                                                  'Key': output_key}, ExpiresIn=3600)
     return response
 
-runpod.serverless.start({"handler": handler})
+runpod.serverless.start({"handler": handler}) 
+
