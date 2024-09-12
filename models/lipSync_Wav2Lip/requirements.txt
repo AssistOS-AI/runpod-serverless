@@ -1,20 +1,20 @@
+opencv-python-headless
+numpy
 Pillow
 runpod
-diffusers[torch]
-transformers
+diffusers[torch]==0.10.2  # Compatibil cu torch < 1.14
+transformers==4.21.1  # Testat pentru compatibilitate cu versiuni mai vechi de torch
 boto3
 moviepy
+librosa
 requests
+torch==1.12.1  # Versiune stabilă de torch
+torchvision==0.13.1  # Compatibil cu torch 1.12.1
 ffmpeg-python
 audioread
 realesrgan>=0.2.5
 scipy
+tqdm
 lmdb
 pyyaml
 yapf
-opencv-python-headless
-librosa>=0.7.0
-torch==2.1.0
-torchvision==0.16.0
-numpy<2
-tqdm
