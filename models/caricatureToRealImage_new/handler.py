@@ -19,7 +19,7 @@ def handler(job):
     aws_region = job_input["aws_region"]
     endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
     prompt = job_input.get("prompt", "4k photo, highly detailed")
-    negative_prompt = job_input.get("negativePrompt", "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured")
+    negativePrompt = job_input.get("negativePrompt", "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured")
     # Set AWS credentials și regiunea
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
@@ -62,7 +62,7 @@ def handler(job):
 
     gen_images = pipe(
         prompt=prompt,
-        negative_prompt=negative_prompt,
+        negativePrompt=negativePrompt,
         image=image_sketch,
         num_inference_steps=30,
         adapter_conditioning_scale=0.9,
