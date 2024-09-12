@@ -62,7 +62,7 @@ def handler(job):
 
     gen_images = pipe(
         prompt=prompt,
-        negativePrompt=negativePrompt,
+        negative_prompt=negativePrompt,
         image=image_sketch,
         num_inference_steps=30,
         adapter_conditioning_scale=0.9,
