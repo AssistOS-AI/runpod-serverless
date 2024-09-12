@@ -19,7 +19,7 @@ RUN pip install -r requirements.txt
 # Clone the Wav2Lip repo into the current directory
 RUN git clone https://github.com/Rudrabha/Wav2Lip.git && \
     cd Wav2Lip && \
-    pip install torch torchvision torchaudio numpy opencv-python moviepy librosa --no-cache-dir
+    pip install librosa==0.7.0 numpy==1.17.1 opencv-contrib-python>=4.2.0.34 opencv-python==4.1.0.25 torch==1.1.0 torchvision==0.3.0 tqdm==4.45.0 numba==0.48 --no-cache-dir
 
 # Upgrade torch to the latest version
 RUN pip install --upgrade torch
