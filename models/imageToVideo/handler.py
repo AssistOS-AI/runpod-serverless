@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 from PIL import Image
-from diffusers import StableDiffusionXLAdapterPipeline, T2IAdapter, EulerAncestralDiscreteScheduler, AutoencoderKL
-from controlnet_aux.pidi import PidiNetDetector
+from diffusers import StableDiffusionImg2VidPipeline
 import torch
 import boto3
 import io
@@ -18,8 +17,8 @@ def handler(job):
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
     endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
-    prompt = job_input.get("prompt", "4k photo, highly detailed")
-    negative_prompt = job_input.get("negative_prompt", "extra digit, fewer digits, cropped, worst quality, low quality, glitch, deformed, mutated, ugly, disfigured")
+    prompt = job_input.get("prompt", "4k video, highly detailed")
+    negative_prompt = job_input.get("negative_prompt", "low quality, glitch, deformed")
 
     # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
@@ -35,49 +34,42 @@ def handler(job):
     image = Image.open(io.BytesIO(image_data))
     image = np.array(image)
 
-    # Convert image to grayscale if necessary
-    if image.ndim == 3 and image.shape[2] == 3:
-        image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    else:
-        image_gray = image
+    # Convert image to RGB if it's not in that format
+    if image.ndim == 2 or image.shape[2] == 1:  # Grayscale or single channel
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
-    # Use PidiNet for sketch detection
-    pidinet = PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
-    image_pil = Image.fromarray(image_gray)
-    image_sketch = pidinet(image_pil, detect_resolution=1024, image_resolution=1024, apply_filter=True)
-
-    # Load T2I-Adapter for sketches
-    adapter = T2IAdapter.from_pretrained(
-        "TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, variant="fp16"
-    ).to("cuda")
-
-    # Load Stable Diffusion XL model and scheduler
-    model_id = 'stabilityai/stable-diffusion-xl-base-1.0'
-    euler_a = EulerAncestralDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
-    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-
-    pipe = StableDiffusionXLAdapterPipeline.from_pretrained(
-        model_id, vae=vae, adapter=adapter, scheduler=euler_a, torch_dtype=torch.float16, variant="fp16"
+    # Load the Stable Diffusion Img2Vid model from Hugging Face
+    pipe = StableDiffusionImg2VidPipeline.from_pretrained(
+        "stabilityai/stable-video-diffusion-img2vid", torch_dtype=torch.float16
     ).to("cuda")
     pipe.enable_xformers_memory_efficient_attention()
 
-    # Generate images
-    gen_images = pipe(
+    # Generate video from image
+    video_frames = pipe(
         prompt=prompt,
         negative_prompt=negative_prompt,
-        image=image_sketch,
+        image=image,  # Input image
         num_inference_steps=30,
-        adapter_conditioning_scale=0.9,
+        num_frames=16,  # Number of frames in the video (you can adjust this)
         guidance_scale=7.5,
-    ).images[0]
+    ).frames
 
-    # Save generated image back to S3
-    buffer = io.BytesIO()
-    gen_images.save(buffer, format="PNG")
-    buffer.seek(0)
-    s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
+    # Create a video from frames
+    height, width, _ = video_frames[0].shape
+    video_path = "/tmp/generated_video.mp4"
+    out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height))
 
-    # Return the presigned URL for the generated image
+    for frame in video_frames:
+        frame_rgb = np.array(frame)  # Convert to RGB
+        out.write(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR))
+
+    out.release()
+
+    # Upload the video to S3
+    with open(video_path, "rb") as video_file:
+        s3.put_object(Bucket=bucket_name, Key=output_key, Body=video_file, ContentType='video/mp4')
+
+    # Return the presigned URL for the generated video
     response = s3.generate_presigned_url('get_object',
                                          Params={'Bucket': bucket_name,
                                                  'Key': output_key}, ExpiresIn=3600)
