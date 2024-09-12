@@ -21,5 +21,8 @@ RUN git clone https://github.com/Rudrabha/Wav2Lip.git && \
     cd Wav2Lip && \
     pip install torch torchvision torchaudio numpy opencv-python moviepy librosa --no-cache-dir
 
+# Upgrade torch to the latest version
+RUN pip install --upgrade torch
+
 # Define the command to run the application
 CMD ["python", "-u", "handler.py"]
