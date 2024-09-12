@@ -10,6 +10,7 @@ function generateRandomString(length) {
 }
 
 function uploadFile() {
+    console.log("sunt aici");
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
@@ -25,7 +26,7 @@ function uploadFile() {
     const file = fileInput.files[0];
     const fileExtension = file.name.split('.').pop(); // Extract the file extension
     randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-
+    console.log("sunt aici1");
     const s3 = new AWS.S3({
         endpoint: new AWS.Endpoint(endpoint),
         credentials: new AWS.Credentials({
@@ -43,7 +44,7 @@ function uploadFile() {
     };
 
     loadingSpinner.style.display = '';
-
+    console.log("sunt aici3");
     s3.upload(params, function(err, data) {
         loadingSpinner.style.display = 'none';
 
@@ -56,6 +57,7 @@ function uploadFile() {
             alert('File uploaded successfully!');
         }
     });
+    console.log("sunt aici4");
 }
 
 function submitForm(event) {
