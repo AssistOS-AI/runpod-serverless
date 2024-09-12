@@ -100,7 +100,13 @@ function checkStatus(requestId, apiKey) {
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
                     displayResult(data.output);
                 }
-            })
+                else if (data.status === 'FAILED') {
+                    clearInterval(intervalId);
+                    loadingSpinner.style.display = 'none'; // Hide spinner on failure
+                    form.style.display = ''; // Show form again if there's a failure
+                    alert('Processing failed. Please try again.');
+            }
+            }) 
             .catch(error => {
                 console.error('Error:', error);
                 clearInterval(intervalId);

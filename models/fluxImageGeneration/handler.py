@@ -32,27 +32,25 @@ def handler(job):
      # Send the query to Hugging Face API directly
     response = requests.post(API_URL, headers=headers, json={"inputs": hf_prompt})
 
-    if response.status_code == 200:
-        # Read the response content
-        image_bytes = response.content
+    #if response.status_code == 200:
+    # Read the response content
+    image_bytes = response.content
 
-        # Load the image using PIL from the response bytes
-        image = Image.open(io.BytesIO(image_bytes))
+    # Load the image using PIL from the response bytes
+    image = Image.open(io.BytesIO(image_bytes))
 
-        # Save the image into a BytesIO buffer
-        buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        buffer.seek(0)
+    # Save the image into a BytesIO buffer
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
 
-        # Upload the image to S3
-        s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
+    # Upload the image to S3
+    s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
 
-        # Generate a URL for the uploaded image in S3
-        response_url = s3.generate_presigned_url('get_object',
+    # Generate a URL for the uploaded image in S3
+    response_url = s3.generate_presigned_url('get_object',
                                               Params={'Bucket': bucket_name, 'Key': output_key},
                                               ExpiresIn=3600)
-        return response_url
-    else:
-        raise Exception(f"Hugging Face API request failed with status code {response.status_code}")
+    return response_url
 
 runpod.serverless.start({"handler": handler})  # Required to start the serverless function
