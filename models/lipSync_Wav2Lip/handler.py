@@ -38,7 +38,7 @@ download_model(wav2lip_model_url, wav2lip_model_path)
 # Function to load the model from a .pth file
 def load_model_from_pth(path):
     model = Wav2Lip()
-    checkpoint = torch.load(path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(path, map_location=torch.device('cpu'), weights_only=True)
     model.load_state_dict(checkpoint['state_dict'])
     return model.eval()
 
