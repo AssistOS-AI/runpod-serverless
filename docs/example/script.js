@@ -61,6 +61,8 @@ function uploadFile() {
 function submitForm(event) {
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const prompt = document.getElementById('prompt').value;
+    const negativePrompt = document.getElementById('negativePrompt').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
     event.preventDefault();
@@ -85,7 +87,9 @@ function submitForm(event) {
             "aws_access_key_id": accessKeyId,
             "aws_secret_access_key": secretAccessKey,
             "endpoint": endpoint,
-            "aws_region": "fra1"
+            "aws_region": "fra1",
+            "prompt": prompt,  
+            "negative_prompt": negativePrompt 
         }
     };
 
