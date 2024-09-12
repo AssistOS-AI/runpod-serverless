@@ -50,6 +50,8 @@ function uploadFile() {
         if (err) {
             console.error('Upload Error:', err);
             alert('File upload failed: ' + err.message);
+            // Show form again on error
+            document.getElementById('inputForm').style.display = '';
         } else {
             console.log('Upload Success:', data);
             uploadedFileUrl = data.Location;
@@ -147,5 +149,5 @@ function checkStatus(requestId, apiKey) {
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
-    document.getElementById('inputForm').style.display = ''; // Show the form again
+    document.getElementById('inputForm').style.display = 'none'; // Show the form again
 }
