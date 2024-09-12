@@ -89,7 +89,7 @@ function submitForm(event) {
             "endpoint": endpoint,
             "aws_region": "fra1",
             "prompt": prompt,  
-            "negative_prompt": negativePrompt 
+            "negativePrompt": negativePrompt 
         }
     };
 
