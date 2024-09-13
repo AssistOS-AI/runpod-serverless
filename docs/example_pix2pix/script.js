@@ -28,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function uploadFile() {
-    console.log("sunt aici");
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
@@ -44,7 +43,6 @@ function uploadFile() {
     const file = fileInput.files[0];
     const fileExtension = file.name.split('.').pop(); // Extract the file extension
     randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-    console.log("sunt aici1");
     const s3 = new AWS.S3({
         endpoint: new AWS.Endpoint(endpoint),
         credentials: new AWS.Credentials({
@@ -62,7 +60,6 @@ function uploadFile() {
     };
 
     loadingSpinner.style.display = '';
-    console.log("sunt aici3");
     s3.upload(params, function(err, data) {
         loadingSpinner.style.display = 'none';
 
@@ -75,7 +72,6 @@ function uploadFile() {
             alert('File uploaded successfully!');
         }
     });
-    console.log("sunt aici4");
 }
 
 function submitForm(event) {
@@ -107,7 +103,7 @@ function submitForm(event) {
             "aws_secret_access_key": secretAccessKey,
             "endpoint": endpoint,
             "aws_region": "fra1",
-            "hf_prompt": prompt, 
+            "hf_prompt": prompt,
         }
     };
 
@@ -133,7 +129,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
-    const statusUrl = `https://api.runpod.ai/v2/ynfas564lyueuq/status/${requestId}`;
+    const statusUrl = `https://api.runpod.ai/v2/z8douj1qd7dhzp/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
@@ -155,13 +151,7 @@ function checkStatus(requestId, apiKey) {
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
                     displayResult(data.output);
                 }
-                else if (data.status === 'FAILED') {
-                    clearInterval(intervalId);
-                    loadingSpinner.style.display = 'none'; // Hide spinner on failure
-                    form.style.display = ''; // Show form again if there's a failure
-                    alert('Processing failed. Please try again.');
-            }
-            }) 
+            })
             .catch(error => {
                 console.error('Error:', error);
                 clearInterval(intervalId);
