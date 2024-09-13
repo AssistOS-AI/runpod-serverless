@@ -17,8 +17,6 @@ def handler(job):
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
     endpoint = job_input.get("endpoint", None)
-    prompt = job_input.get("prompt", "4k video, highly detailed")
-    negative_prompt = job_input.get("negative_prompt", "low quality, glitch, deformed")
 
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
@@ -42,8 +40,6 @@ def handler(job):
 
     # Generate video frames
     video_frames = pipe(
-        prompt=prompt,
-        negative_prompt=negative_prompt,
         image=image,
         num_inference_steps=30,
         num_frames=16,
