@@ -15,9 +15,9 @@ def handler(job):
     face_image_key = job_input["face_image_key"]
     body_image_key = job_input["body_image_key"]
     
-    # Indicii pentru față și corp
-    face_index = job_input["face_index"]
-    body_index = job_input["body_index"]
+    # Indicii pentru față și corp (convertiți la întreg)
+    face_index = int(job_input["face_index"])
+    body_index = int(job_input["body_index"])
     
     # Cheia pentru output-ul final în S3
     output_key = job_input["output_key"]
@@ -55,6 +55,13 @@ def handler(job):
     # Conectează-te la API-ul de pe Hugging Face
     client = Client("https://dentro-face-swap.hf.space/")
 
+    # Debug: afiseaza datele înainte de a trimite cererea la API
+    print(f"face_image_path: {face_image_path}")
+    print(f"body_image_path: {body_image_path}")
+    print(f"face_index: {face_index}")
+    print(f"body_index: {body_index}")
+    print(f"api_name: /predict")
+
     # Trimite cererea către API-ul de face swap folosind indicii din input
     try:
         result = client.predict(
@@ -62,7 +69,7 @@ def handler(job):
             face_index,       # Indicele feței în imaginea sursă
             body_image_path,  # Imaginea destinație cu corpul
             body_index,       # Indicele feței în imaginea destinație
-            api_name="/predict"
+            api_name="/predict"  # Asigură-te că api_name este un string
         )
 
         # Verifică dacă rezultatul este un URL sau date de imagine
