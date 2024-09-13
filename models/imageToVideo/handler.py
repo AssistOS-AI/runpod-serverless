@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 from PIL import Image
-from diffusers import StableVideoDiffusionPipeline, export_to_video
+from diffusers import StableVideoDiffusionPipeline
+from diffusers.utils import load_image, export_to_video
 import torch
 import boto3
 import io
