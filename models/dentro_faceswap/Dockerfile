@@ -5,18 +5,16 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     build-essential \
     cmake \
-    wget  # Adaugă wget pentru a descărca modelul
+    wget  # Adăugăm wget pentru descărcarea modelului
 
-# Set the working directory to the app root
-WORKDIR /app
-
-COPY . /app
+# Copiezi toate fișierele proiectului în directorul curent
+COPY . .
 
 # Download the model
-RUN wget -O /app/inswapper_128.onnx https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx
+RUN wget -O inswapper_128.onnx https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx
 
 # Install Python dependencies
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Run the application
 CMD ["python", "-u", "handler.py"]
