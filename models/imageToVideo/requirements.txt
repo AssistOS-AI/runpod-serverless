@@ -9,10 +9,11 @@ transformers
 boto3
 accelerate
 safetensors
-controlnet_aux==0.0.7 
+controlnet_aux==0.0.7
 scipy
 tqdm
 lmdb
 pyyaml
 yapf
 xformers
+imageio-ffmpeg
