@@ -1,24 +1,33 @@
 import os
 import io
 import boto3
-import runpod
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
 import onnxruntime as ort
 from insightface.app import FaceAnalysis
 from insightface.model_zoo import get_model
+import runpod
+
+# Function to ensure the model is downloaded
+def ensure_model(model_name, model_path):
+    if not os.path.exists(model_path):
+        print(f"Model {model_name} not found. Downloading...")
+        get_model(model_name, download=True, download_zip=True)
+        print(f"Model {model_name} downloaded and saved to {model_path}.")
+    else:
+        print(f"Model {model_name} already exists at {model_path}.")
 
 def handler(job):
     job_input = job["input"]
     bucket_name = job_input["bucket_name"]
-    source_key = job_input["source_key"]  # Cheia pentru imaginea sursă
-    destination_key = job_input["destination_key"]  # Cheia pentru imaginea destinație
+    source_key = job_input["face_image_key"]  # Key for face image
+    destination_key = job_input["body_image_key"]  # Key for body image
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    source_face_index = int(job_input["source_face_index"])
-    destination_face_index = int(job_input["destination_face_index"])
+    source_face_index = int(job_input["face_index"])
+    destination_face_index = int(job_input["body_index"])
     endpoint = job_input.get("endpoint", None)
 
     # Set AWS credentials and region
@@ -40,9 +49,17 @@ def handler(job):
     destination_image = Image.open(io.BytesIO(destination_image_data)).convert("RGB")
 
     # Initialize FaceAnalysis and the swapper model
+    model_name = 'inswapper_128.onnx'
+    model_path = '/models/inswapper_128.onnx'
+    
+    # Ensure model is downloaded
+    ensure_model(model_name, model_path)
+    
     app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
-    swapper = get_model('inswapper_128.onnx', download=True, download_zip=True)
+    
+    # Load the model
+    swapper = get_model(model_name, download=False, download_zip=False)
 
     # Prepare the images
     def get_faces(image):
