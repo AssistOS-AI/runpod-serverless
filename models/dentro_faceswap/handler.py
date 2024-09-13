@@ -6,28 +6,35 @@ from PIL import Image
 import onnxruntime as ort
 from insightface.app import FaceAnalysis
 from insightface.model_zoo import get_model
-import runpod
+import requests
+
+# Function to download the model if it doesn't exist
+def download_model(url, path):
+    response = requests.get(url)
+    with open(path, 'wb') as f:
+        f.write(response.content)
+    print(f"Model downloaded to {path}.")
 
 # Function to ensure the model is downloaded
 def ensure_model(model_name, model_path):
     if not os.path.exists(model_path):
         print(f"Model {model_name} not found. Downloading...")
-        get_model(model_name, download=True, download_zip=True)
-        print(f"Model {model_name} downloaded and saved to {model_path}.")
+        url = 'https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx'
+        download_model(url, model_path)
     else:
         print(f"Model {model_name} already exists at {model_path}.")
 
 def handler(job):
     job_input = job["input"]
     bucket_name = job_input["bucket_name"]
-    source_key = job_input["face_image_key"]  # Key for face image
-    destination_key = job_input["body_image_key"]  # Key for body image
+    face_image_key = job_input["face_image_key"]
+    body_image_key = job_input["body_image_key"]
+    face_index = int(job_input["face_index"])
+    body_index = int(job_input["body_index"])
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    source_face_index = int(job_input["face_index"])
-    destination_face_index = int(job_input["body_index"])
     endpoint = job_input.get("endpoint", None)
 
     # Set AWS credentials and region
@@ -38,28 +45,24 @@ def handler(job):
     # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
-    # Load the source image from S3
-    response = s3.get_object(Bucket=bucket_name, Key=source_key)
-    source_image_data = response['Body'].read()
-    source_image = Image.open(io.BytesIO(source_image_data)).convert("RGB")
+    # Load the face and body images from S3
+    face_response = s3.get_object(Bucket=bucket_name, Key=face_image_key)
+    body_response = s3.get_object(Bucket=bucket_name, Key=body_image_key)
 
-    # Load the destination image from S3
-    response = s3.get_object(Bucket=bucket_name, Key=destination_key)
-    destination_image_data = response['Body'].read()
-    destination_image = Image.open(io.BytesIO(destination_image_data)).convert("RGB")
+    face_image_data = face_response['Body'].read()
+    body_image_data = body_response['Body'].read()
+
+    face_image = Image.open(io.BytesIO(face_image_data)).convert("RGB")
+    body_image = Image.open(io.BytesIO(body_image_data)).convert("RGB")
 
     # Initialize FaceAnalysis and the swapper model
-    model_name = 'inswapper_128.onnx'
-    model_path = '/models/inswapper_128.onnx'
-    
-    # Ensure model is downloaded
-    ensure_model(model_name, model_path)
-    
     app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
-    
-    # Load the model
-    swapper = get_model(model_name, download=False, download_zip=False)
+
+    # Define model path and ensure model is downloaded
+    model_path = 'inswapper_128.onnx'
+    ensure_model('inswapper_128.onnx', model_path)
+    swapper = ort.InferenceSession(model_path)
 
     # Prepare the images
     def get_faces(image):
@@ -71,16 +74,18 @@ def handler(job):
             raise ValueError(f"The image includes only {len(faces)} faces, however, you asked for face {face_id}")
         return faces[face_id - 1]
 
-    # Detect faces in the source image
-    source_faces = get_faces(source_image)
-    source_face = get_face(source_faces, source_face_index)
+    # Detect faces in the face and body images
+    face_faces = get_faces(face_image)
+    body_faces = get_faces(body_image)
 
-    # Detect faces in the destination image
-    destination_faces = get_faces(destination_image)
-    destination_face = get_face(destination_faces, destination_face_index)
+    if not face_faces or not body_faces:
+        raise ValueError("No faces detected in one or both images.")
+
+    source_face = get_face(face_faces, face_index)
+    destination_face = get_face(body_faces, body_index)
 
     # Perform the face swap
-    result_image = swapper.get(destination_image, destination_face, source_face, paste_back=True)
+    result_image = swapper.get(face_image, destination_face, source_face, paste_back=True)
 
     # Save the result image to a BytesIO buffer
     buffer = io.BytesIO()
@@ -95,5 +100,3 @@ def handler(job):
                                          Params={'Bucket': bucket_name,
                                                  'Key': output_key}, ExpiresIn=3600)
     return response
-
-runpod.serverless.start({"handler": handler})
