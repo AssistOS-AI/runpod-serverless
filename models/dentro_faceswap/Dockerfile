@@ -16,7 +16,7 @@ COPY . /app
 RUN wget -O /app/inswapper_128.onnx https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Run the application
 CMD ["python", "-u", "handler.py"]
