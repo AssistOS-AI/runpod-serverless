@@ -9,6 +9,24 @@ function generateRandomString(length) {
     return base64UrlString;
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    // Retrieve data from local storage and populate the form fields
+    const formFields = ["accessKeyId", "secretAccessKey", "apiKey", "authApiKey", "prompt"];
+    formFields.forEach(field => {
+        const value = localStorage.getItem(field);
+        if (value) {
+            document.getElementById(field).value = value;
+        }
+    });
+
+    // Save form data to local storage on input change
+    formFields.forEach(field => {
+        document.getElementById(field).addEventListener("input", function() {
+            localStorage.setItem(field, this.value);
+        });
+    });
+});
+
 function uploadFile() {
     console.log("sunt aici");
     const accessKeyId = document.getElementById('accessKeyId').value;
@@ -115,7 +133,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
-    const statusUrl = `https://api.runpod.ai/v2/z8douj1qd7dhzp/status/${requestId}`;
+    const statusUrl = `https://api.runpod.ai/v2/ynfas564lyueuq/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
@@ -137,7 +155,13 @@ function checkStatus(requestId, apiKey) {
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
                     displayResult(data.output);
                 }
-            })
+                else if (data.status === 'FAILED') {
+                    clearInterval(intervalId);
+                    loadingSpinner.style.display = 'none'; // Hide spinner on failure
+                    form.style.display = ''; // Show form again if there's a failure
+                    alert('Processing failed. Please try again.');
+            }
+            }) 
             .catch(error => {
                 console.error('Error:', error);
                 clearInterval(intervalId);
