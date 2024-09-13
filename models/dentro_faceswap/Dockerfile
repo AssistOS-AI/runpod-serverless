@@ -1,20 +1,28 @@
+# Folosim imaginea python 3.11.1-buster ca bază
 FROM python:3.11.1-buster
 
+# Instalăm dependențele de sistem necesare
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
     build-essential \
     cmake \
-    wget  # Adăugăm wget pentru descărcarea modelului
+    wget  # Pentru descărcarea modelului
 
-# Copiezi toate fișierele proiectului în directorul curent
-COPY . .
+# Setăm directorul de lucru la rădăcina containerului
+WORKDIR /
 
-# Download the model
-RUN wget -O inswapper_128.onnx https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx
+# Copiem toate fișierele proiectului în directorul curent
+COPY . /
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Set the working directory to the specific model directory
+WORKDIR /models/dentro_faceswap
 
-# Run the application
+# Descărcăm modelul ONNX în directorul curent
+RUN wget -O /inswapper_128.onnx https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx
+
+# Instalăm dependențele Python specificate în requirements.txt
+RUN pip install  -r requirements.txt
+
+# Comandă pentru a rula aplicația
 CMD ["python", "-u", "handler.py"]
