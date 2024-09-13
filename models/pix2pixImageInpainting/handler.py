@@ -3,7 +3,6 @@ import requests
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
-
 def handler(job):
     job_input = job["input"]  # Access the input from the request.
     bucket_name = job_input["bucket_name"]
