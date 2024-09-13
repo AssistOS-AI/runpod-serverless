@@ -2,8 +2,7 @@ import os
 import io
 import boto3
 import numpy as np
-from PIL import Image, ImageOps
-import onnxruntime as ort
+from PIL import Image
 from insightface.app import FaceAnalysis
 from insightface.model_zoo import get_model
 import runpod
@@ -11,8 +10,8 @@ import runpod
 def handler(job):
     job_input = job["input"]
     bucket_name = job_input["bucket_name"]
-    source_key = job_input["source_key"]  # Cheia pentru imaginea sursă
-    destination_key = job_input["destination_key"]  # Cheia pentru imaginea destinație
+    source_key = job_input["source_key"]
+    destination_key = job_input["destination_key"]
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
@@ -46,7 +45,8 @@ def handler(job):
     # Initialize FaceAnalysis and the swapper model
     app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
-    swapper = get_model('inswapper_128.onnx', download=False)  # Use local model if available
+    model_path = '/app/inswapper_128.onnx'  # Adjust path as needed
+    swapper = get_model(model_path, download=False)  # Use local model if available
 
     # Prepare the images
     def get_faces(image_np):
