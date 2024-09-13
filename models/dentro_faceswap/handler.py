@@ -55,12 +55,8 @@ def handler(job):
     # Conectează-te la API-ul de pe Hugging Face
     client = Client("https://dentro-face-swap.hf.space/")
 
-    # Debug: afiseaza datele înainte de a trimite cererea la API
-    print(f"face_image_path: {face_image_path}")
-    print(f"body_image_path: {body_image_path}")
-    print(f"face_index: {face_index}")
-    print(f"body_index: {body_index}")
-    print(f"api_name: /predict")
+    # Verificăm că api_name este string corect
+    api_name_str = "/predict"
 
     # Trimite cererea către API-ul de face swap folosind indicii din input
     try:
@@ -69,7 +65,7 @@ def handler(job):
             face_index,       # Indicele feței în imaginea sursă
             body_image_path,  # Imaginea destinație cu corpul
             body_index,       # Indicele feței în imaginea destinație
-            api_name="/predict"  # Asigură-te că api_name este un string
+            api_name=api_name_str  # Forțăm api_name să fie string
         )
 
         # Verifică dacă rezultatul este un URL sau date de imagine
