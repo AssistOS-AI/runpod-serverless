@@ -45,7 +45,7 @@ def handler(job):
     # Initialize FaceAnalysis and the swapper model
     app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
-    model_path = '/app/inswapper_128.onnx'  # Path where the model is downloaded
+    model_path = 'inswapper_128.onnx'  # Path where the model is downloaded
     swapper = get_model(model_path, download=False)  # Use local model
 
     # Prepare the images
