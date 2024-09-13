@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from PIL import Image
-from diffusers import StableDiffusionImg2VidPipeline
+from diffusers import StableDiffusionPipeline
 import torch
 import boto3
 import io
