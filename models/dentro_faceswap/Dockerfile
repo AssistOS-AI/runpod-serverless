@@ -7,12 +7,13 @@ RUN apt-get update && apt-get install -y \
     cmake
 
 # Set the working directory to the app root
-WORKDIR /
+WORKDIR /app
 
-COPY . /
+COPY . /app
 
-# Set the working directory to the specific model directory
-WORKDIR /models/dentro_faceswap
+# Ensure model is copied
+COPY inswapper_128.onnx /app/inswapper_128.onnx
+
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
