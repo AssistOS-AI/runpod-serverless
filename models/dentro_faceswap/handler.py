@@ -7,26 +7,22 @@ from gradio_client import Client
 import runpod
 
 def handler(job):
-    # Accesează input-ul din cererea jobului
-    job_input = job["input"]
+    try:
+        # Accesează input-ul din cererea jobului
+        job_input = job["input"]
+    except KeyError as e:
+        return f"Cheia '{e.args[0]}' nu a fost găsită în cererea jobului."
+
     bucket_name = job_input["bucket_name"]
-    
-    # Cheile pentru imaginile din S3
     face_image_key = job_input["face_image_key"]
     body_image_key = job_input["body_image_key"]
-    
-    # Indicii pentru față și corp (convertiți la întreg)
     face_index = int(job_input["face_index"])
     body_index = int(job_input["body_index"])
-    
-    # Cheia pentru output-ul final în S3
     output_key = job_input["output_key"]
-    
-    # Credite AWS
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    endpoint = job_input.get("endpoint", None)  # Optional custom endpoint URL
+    endpoint = job_input.get("endpoint", None)
     
     # Setează credentialele și regiunea pentru AWS
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
@@ -53,10 +49,13 @@ def handler(job):
     cv2.imwrite(body_image_path, body_image)
 
     # Conectează-te la API-ul de pe Hugging Face
-    client = Client("https://dentro-face-swap.hf.space/")
+    client = Client("https://dentro-face-swap.hf.space/--replicas/ygqln/")
 
-    # Verificăm că api_name este string corect
-    api_name_str = "/predict"
+    # Debug: afiseaza datele înainte de a trimite cererea la API
+    print(f"face_image_path: {face_image_path}")
+    print(f"body_image_path: {body_image_path}")
+    print(f"face_index: {face_index}")
+    print(f"body_index: {body_index}")
 
     # Trimite cererea către API-ul de face swap folosind indicii din input
     try:
@@ -64,8 +63,7 @@ def handler(job):
             face_image_path,  # Imaginea sursă cu fața
             face_index,       # Indicele feței în imaginea sursă
             body_image_path,  # Imaginea destinație cu corpul
-            body_index,       # Indicele feței în imaginea destinație
-            api_name=api_name_str  # Forțăm api_name să fie string
+            body_index        # Indicele feței în imaginea destinație
         )
 
         # Verifică dacă rezultatul este un URL sau date de imagine
