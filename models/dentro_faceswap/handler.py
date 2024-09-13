@@ -1,71 +1,81 @@
 import os
+import io
 import boto3
-import cv2
 import numpy as np
-from inswapper import InSwapper  # Asigură-te că ai importat corect
-import runpod
+from PIL import Image, ImageOps
+import onnxruntime as ort
+from insightface.app import FaceAnalysis
+from insightface.model_zoo import get_model
 
 def handler(job):
-    try:
-        # Accesează input-ul din cererea jobului
-        job_input = job["input"]
-    except KeyError as e:
-        return f"Cheia '{e.args[0]}' nu a fost găsită în cererea jobului."
-
+    job_input = job["input"]
     bucket_name = job_input["bucket_name"]
-    face_image_key = job_input["face_image_key"]
-    body_image_key = job_input["body_image_key"]
-    face_index = int(job_input["face_index"])
-    body_index = int(job_input["body_index"])
+    source_key = job_input["source_key"]  # Cheia pentru imaginea sursă
+    destination_key = job_input["destination_key"]  # Cheia pentru imaginea destinație
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
+    source_face_index = int(job_input["source_face_index"])
+    destination_face_index = int(job_input["destination_face_index"])
     endpoint = job_input.get("endpoint", None)
 
-    # Setează credentialele și regiunea pentru AWS
+    # Set AWS credentials and region
     os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key_id
     os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_access_key
     os.environ['AWS_DEFAULT_REGION'] = aws_region
 
-    # Inițializează clientul S3
+    # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
-    # Descarcă imaginea cu fața de pe S3
-    face_response = s3.get_object(Bucket=bucket_name, Key=face_image_key)
-    face_image_data = face_response['Body'].read()
-    face_image = cv2.imdecode(np.frombuffer(face_image_data, np.uint8), cv2.IMREAD_COLOR)
+    # Load the source image from S3
+    response = s3.get_object(Bucket=bucket_name, Key=source_key)
+    source_image_data = response['Body'].read()
+    source_image = Image.open(io.BytesIO(source_image_data)).convert("RGB")
 
-    # Descarcă imaginea destinatarului (cu corpul) de pe S3
-    body_response = s3.get_object(Bucket=bucket_name, Key=body_image_key)
-    body_image_data = body_response['Body'].read()
-    body_image = cv2.imdecode(np.frombuffer(body_image_data, np.uint8), cv2.IMREAD_COLOR)
+    # Load the destination image from S3
+    response = s3.get_object(Bucket=bucket_name, Key=destination_key)
+    destination_image_data = response['Body'].read()
+    destination_image = Image.open(io.BytesIO(destination_image_data)).convert("RGB")
 
-    # Salvează imaginile temporar pe disc
-    face_image_path = "/tmp/face_image.png"
-    body_image_path = "/tmp/body_image.png"
-    cv2.imwrite(face_image_path, face_image)
-    cv2.imwrite(body_image_path, body_image)
+    # Initialize FaceAnalysis and the swapper model
+    app = FaceAnalysis(name='buffalo_l')
+    app.prepare(ctx_id=0, det_size=(640, 640))
+    swapper = get_model('inswapper_128.onnx', download=True, download_zip=True)
 
-    # Aplică modelul de schimbare a feței
-    try:
-        result_image = run_face_swap(face_image_path, body_image_path, face_index, body_index)
-        _, buffer = cv2.imencode('.png', result_image)
-        result_image_data = buffer.tobytes()
-        
-        # Salvează imaginea rezultată în S3
-        s3.put_object(Bucket=bucket_name, Key=output_key, Body=result_image_data, ContentType='image/png')
+    # Prepare the images
+    def get_faces(image):
+        faces = app.get(image)
+        return sorted(faces, key=lambda x: x.bbox[0])
 
-        # Returnează un URL presigned pentru a accesa imaginea finală
-        response = s3.generate_presigned_url('get_object',
-                                             Params={'Bucket': bucket_name,
-                                                     'Key': output_key},
-                                             ExpiresIn=3600)
+    def get_face(faces, face_id):
+        if len(faces) < face_id or face_id < 1:
+            raise ValueError(f"The image includes only {len(faces)} faces, however, you asked for face {face_id}")
+        return faces[face_id - 1]
 
-        return response
+    # Detect faces in the source image
+    source_faces = get_faces(source_image)
+    source_face = get_face(source_faces, source_face_index)
 
-    except Exception as e:
-        return f"A apărut o eroare: {e}"
+    # Detect faces in the destination image
+    destination_faces = get_faces(destination_image)
+    destination_face = get_face(destination_faces, destination_face_index)
 
-# Pornește handler-ul RunPod pentru a asculta cererile
+    # Perform the face swap
+    result_image = swapper.get(destination_image, destination_face, source_face, paste_back=True)
+
+    # Save the result image to a BytesIO buffer
+    buffer = io.BytesIO()
+    result_image.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    # Upload the result image to S3
+    s3.put_object(Bucket=bucket_name, Key=output_key, Body=buffer, ContentType='image/png')
+
+    # Return a presigned URL for the output image
+    response = s3.generate_presigned_url('get_object',
+                                         Params={'Bucket': bucket_name,
+                                                 'Key': output_key}, ExpiresIn=3600)
+    return response
+
 runpod.serverless.start({"handler": handler})
