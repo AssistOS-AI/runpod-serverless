@@ -5,6 +5,7 @@ import requests
 from PIL import Image
 import runpod
 
+
 # Handler function to accept input and return the presigned URL of the output image
 def handler(job):
     job_input = job["input"]  # Access the input from the request
