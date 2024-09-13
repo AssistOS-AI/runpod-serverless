@@ -1,6 +1,5 @@
 let uploadedFileUrl = '';
 let randomKey = '';
-
 // Function to generate a random string
 function generateRandomString(length) {
     const randomBytes = crypto.getRandomValues(new Uint8Array(32));
@@ -8,7 +7,6 @@ function generateRandomString(length) {
     const base64UrlString = base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return base64UrlString;
 }
-
 function uploadFile() {
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
@@ -16,16 +14,13 @@ function uploadFile() {
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
     const fileInput = document.getElementById('fileInput');
     const loadingSpinner = document.getElementById('loadingSpinner');
-
     if (!fileInput.files.length) {
         alert('Please select a file to upload.');
         return;
     }
-
     const file = fileInput.files[0];
     const fileExtension = file.name.split('.').pop(); // Extract the file extension
     randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-
     const s3 = new AWS.S3({
         endpoint: new AWS.Endpoint(endpoint),
         credentials: new AWS.Credentials({
@@ -34,24 +29,18 @@ function uploadFile() {
         }),
         s3ForcePathStyle: true,
     });
-
     const params = {
         Bucket: bucketName,
         Key: randomKey,
         Body: file,
         ACL: 'public-read'
     };
-
     loadingSpinner.style.display = '';
-
     s3.upload(params, function(err, data) {
         loadingSpinner.style.display = 'none';
-
         if (err) {
             console.error('Upload Error:', err);
             alert('File upload failed: ' + err.message);
-            // Show form again on error
-            document.getElementById('inputForm').style.display = '';
         } else {
             console.log('Upload Success:', data);
             uploadedFileUrl = data.Location;
@@ -59,26 +48,21 @@ function uploadFile() {
         }
     });
 }
-
 function submitForm(event) {
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
     event.preventDefault();
-
     const apiKey = document.getElementById('apiKey').value;
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
-
     if (!uploadedFileUrl) {
         alert('Please upload a file first.');
         return;
     }
-
     form.style.display = 'none';
     loadingSpinner.style.display = '';
-
     const requestBody = {
         "input": {
             "bucket_name": bucketName,
@@ -111,16 +95,13 @@ function submitForm(event) {
             alert('Request failed: ' + error);
         });
 }
-
 function checkStatus(requestId, apiKey) {
     const statusUrl = `https://api.runpod.ai/v2/nvxq25nz8lnrm7/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
-
     // Ensure the spinner is visible while checking status
     loadingSpinner.style.display = '';
     form.style.display = 'none';
-
     const intervalId = setInterval(() => {
         fetch(statusUrl, {
             headers: {
@@ -130,7 +111,6 @@ function checkStatus(requestId, apiKey) {
             .then(response => response.json())
             .then(data => {
                 console.log('Status:', data.status);
-
                 if (data.status === 'COMPLETED') {
                     clearInterval(intervalId);
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
@@ -145,9 +125,8 @@ function checkStatus(requestId, apiKey) {
             });
     }, 5000);
 }
-
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
-    document.getElementById('inputForm').style.display = 'none'; // Show the form again
+    document.getElementById('inputForm').style.display = ''; // Show the form again
 }
