@@ -103,11 +103,11 @@ function submitForm(event) {
             "aws_secret_access_key": secretAccessKey,
             "endpoint": endpoint,
             "aws_region": "fra1",
-            "hf_prompt": prompt,
+            "hf_prompt": prompt
         }
     };
 
-    fetch('https://api.runpod.ai/v2/z8douj1qd7dhzp/run', {
+    fetch('https://api.runpod.ai/v2/ynfas564lyueuq/run', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
-    const statusUrl = `https://api.runpod.ai/v2/z8douj1qd7dhzp/status/${requestId}`;
+    const statusUrl = `https://api.runpod.ai/v2/ynfas564lyueuq/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
