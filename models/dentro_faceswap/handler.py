@@ -1,6 +1,7 @@
 import os
 import io
 import boto3
+import runpod
 import numpy as np
 from PIL import Image, ImageOps
 import onnxruntime as ort
