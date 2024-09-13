@@ -1,35 +1,24 @@
 import os
 import io
-import requests
 import boto3
 import numpy as np
 from PIL import Image, ImageOps
 import onnxruntime as ort
 from insightface.app import FaceAnalysis
+from insightface.model_zoo import get_model
 import runpod
-
-# Funcție pentru a asigura că modelul este descărcat și salvat local
-def ensure_model(model_name, model_path):
-    if not os.path.exists(model_path):
-        url = 'https://huggingface.co/spaces/Dentro/face-swap/resolve/main/inswapper_128.onnx'
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(model_path, 'wb') as f:
-                f.write(response.content)
-        else:
-            raise RuntimeError(f"Failed downloading model from {url}")
 
 def handler(job):
     job_input = job["input"]
     bucket_name = job_input["bucket_name"]
-    face_image_key = job_input["face_image_key"]  # Cheia pentru imaginea cu fata
-    body_image_key = job_input["body_image_key"]  # Cheia pentru imaginea corpului
+    source_key = job_input["source_key"]  # Cheia pentru imaginea sursă
+    destination_key = job_input["destination_key"]  # Cheia pentru imaginea destinație
     output_key = job_input["output_key"]
     aws_access_key_id = job_input["aws_access_key_id"]
     aws_secret_access_key = job_input["aws_secret_access_key"]
     aws_region = job_input["aws_region"]
-    face_index = int(job_input["face_index"])
-    body_index = int(job_input["body_index"])
+    source_face_index = int(job_input["source_face_index"])
+    destination_face_index = int(job_input["destination_face_index"])
     endpoint = job_input.get("endpoint", None)
 
     # Set AWS credentials and region
@@ -40,28 +29,28 @@ def handler(job):
     # Initialize S3 client with a custom endpoint if provided
     s3 = boto3.client('s3', endpoint_url=endpoint)
 
-    # Load the face image from S3
-    response = s3.get_object(Bucket=bucket_name, Key=face_image_key)
-    face_image_data = response['Body'].read()
-    face_image = Image.open(io.BytesIO(face_image_data)).convert("RGB")
+    # Load the source image from S3
+    response = s3.get_object(Bucket=bucket_name, Key=source_key)
+    source_image_data = response['Body'].read()
+    source_image = Image.open(io.BytesIO(source_image_data)).convert("RGB")
 
-    # Load the body image from S3
-    response = s3.get_object(Bucket=bucket_name, Key=body_image_key)
-    body_image_data = response['Body'].read()
-    body_image = Image.open(io.BytesIO(body_image_data)).convert("RGB")
+    # Load the destination image from S3
+    response = s3.get_object(Bucket=bucket_name, Key=destination_key)
+    destination_image_data = response['Body'].read()
+    destination_image = Image.open(io.BytesIO(destination_image_data)).convert("RGB")
+
+    # Convert PIL image to numpy array
+    def pil_to_np(image):
+        return np.array(image)
 
     # Initialize FaceAnalysis and the swapper model
     app = FaceAnalysis(name='buffalo_l')
     app.prepare(ctx_id=0, det_size=(640, 640))
-
-    # Ensure model is downloaded and available
-    model_path = 'inswapper_128.onnx'
-    ensure_model('inswapper_128.onnx', model_path)
-    swapper = ort.InferenceSession(model_path)
+    swapper = get_model('inswapper_128.onnx', download=False)  # Use local model if available
 
     # Prepare the images
-    def get_faces(image):
-        faces = app.get(image)
+    def get_faces(image_np):
+        faces = app.get(image_np)
         return sorted(faces, key=lambda x: x.bbox[0])
 
     def get_face(faces, face_id):
@@ -69,16 +58,23 @@ def handler(job):
             raise ValueError(f"The image includes only {len(faces)} faces, however, you asked for face {face_id}")
         return faces[face_id - 1]
 
-    # Detect faces in the face image
-    face_faces = get_faces(face_image)
-    selected_face = get_face(face_faces, face_index)
+    # Convert images to numpy arrays
+    source_image_np = pil_to_np(source_image)
+    destination_image_np = pil_to_np(destination_image)
 
-    # Detect faces in the body image
-    body_faces = get_faces(body_image)
-    selected_body_face = get_face(body_faces, body_index)
+    # Detect faces in the source image
+    source_faces = get_faces(source_image_np)
+    source_face = get_face(source_faces, source_face_index)
+
+    # Detect faces in the destination image
+    destination_faces = get_faces(destination_image_np)
+    destination_face = get_face(destination_faces, destination_face_index)
 
     # Perform the face swap
-    result_image = swapper.get(body_image, selected_body_face, selected_face, paste_back=True)
+    result_image_np = swapper.get(destination_image_np, destination_face, source_face, paste_back=True)
+
+    # Convert numpy array back to PIL image
+    result_image = Image.fromarray(result_image_np)
 
     # Save the result image to a BytesIO buffer
     buffer = io.BytesIO()
@@ -94,5 +90,4 @@ def handler(job):
                                                  'Key': output_key}, ExpiresIn=3600)
     return response
 
-# Start the serverless function using runpod
 runpod.serverless.start({"handler": handler})
