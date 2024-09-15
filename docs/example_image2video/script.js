@@ -1,6 +1,5 @@
 let uploadedFileUrl = '';
 let randomKey = '';
-
 // Function to generate a random string
 function generateRandomString(length) {
     const randomBytes = crypto.getRandomValues(new Uint8Array(32));
@@ -10,79 +9,7 @@ function generateRandomString(length) {
 }
 
 function uploadFile() {
-    // const accessKeyId = document.getElementById('accessKeyId').value;
-    const accessKeyId = "DO00CZVC2QVLYDAFAWLX";
-    // const secretAccessKey = document.getElementById('secretAccessKey').value;
-    const secretAccessKey = "qfvN6R5OhnyG0+pm6Yk1OaU+HV+4/t2vwgSji045+nQ";
-    const bucketName = 'assistos-demo-bucket';
-    const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    const fileInput = document.getElementById('fileInput');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-
-    if (!fileInput.files.length) {
-        alert('Please select a file to upload.');
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const fileExtension = file.name.split('.').pop(); // Extract the file extension
-    randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-
-    const s3 = new AWS.S3({
-        endpoint: new AWS.Endpoint(endpoint),
-        credentials: new AWS.Credentials({
-            accessKeyId: accessKeyId,
-            secretAccessKey: secretAccessKey
-        }),
-        s3ForcePathStyle: true,
-    });
-
-    const params = {
-        Bucket: bucketName,
-        Key: randomKey,
-        Body: file,
-        ACL: 'public-read'
-    };
-
-    loadingSpinner.style.display = '';
-
-    s3.upload(params, function(err, data) {
-        loadingSpinner.style.display = 'none';
-
-        if (err) {
-            console.error('Upload Error:', err);
-            alert('File upload failed: ' + err.message);
-        } else {
-            console.log('Upload Success:', data);
-            uploadedFileUrl = data.Location;
-            alert('File uploaded successfully!');
-        }
-    });
-}
-
-function submitForm(event) {
-    // const accessKeyId = document.getElementById('accessKeyId').value;
-    const accessKeyId = "DO00CZVC2QVLYDAFAWLX";
-    // const secretAccessKey = document.getElementById('secretAccessKey').value;
-    const secretAccessKey = "qfvN6R5OhnyG0+pm6Yk1OaU+HV+4/t2vwgSji045+nQ";
-    const bucketName = 'assistos-demo-bucket';
-    const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    event.preventDefault();
-
-    // const apiKey = document.getElementById('apiKey').value;
-    const apiKey = "YZI69FTK1YL01QUQ787EU296M2JKRPTGAPOHWVO2";
-    const form = document.getElementById('inputForm');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-
-    if (!uploadedFileUrl) {
-        alert('Please upload a file first.');
-        return;
-    }
-
-    form.style.display = 'none';
-    loadingSpinner.style.display = '';
-
-    const requestBody = {
+	@@ -81,15 +81,15 @@ function submitForm(event) {
         "input": {
             "bucket_name": bucketName,
             "input_key": randomKey,
@@ -98,21 +25,7 @@ function submitForm(event) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-    })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Request ID:', data.id);
-            checkStatus(data.id, apiKey);
-        })
-        .catch((error) => {
-            loadingSpinner.style.display = 'none';
-            form.style.display = '';
-            console.error('Error:', error);
-            alert('Request failed: ' + error);
-        });
+	@@ -111,7 +111,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
@@ -120,20 +33,7 @@ function checkStatus(requestId, apiKey) {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
-    // Ensure the spinner is visible while checking status
-    loadingSpinner.style.display = '';
-    form.style.display = 'none';
-
-    const intervalId = setInterval(() => {
-        fetch(statusUrl, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Status:', data.status);
-
+	@@ -132,7 +132,7 @@ function checkStatus(requestId, apiKey) {
                 if (data.status === 'COMPLETED') {
                     clearInterval(intervalId);
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
@@ -141,13 +41,7 @@ function checkStatus(requestId, apiKey) {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                clearInterval(intervalId);
-                loadingSpinner.style.display = 'none'; // Hide spinner on error
-                form.style.display = ''; // Show form again if there's an error
-            });
-    }, 5000);
-}
+	@@ -146,6 +146,6 @@ function checkStatus(requestId, apiKey) {
 
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
