@@ -57,15 +57,39 @@ def handler(job):
 
     # Initialize RealESRGAN upscaler
     model = SRVGGNetCompact(num_in_ch=3, num_out_ch=3, num_feat=64, num_conv=32, upscale=4, act_type='prelu')
-    half = True if torch.cuda.is_available() else False
-    upsampler = RealESRGANer(scale=4, model_path=realesrgan_model_path, model=model, tile=0, tile_pad=10, pre_pad=0, half=half)
+    
+    # Determine if GPU is available and supports FP16
+    half = True if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] >= 7 else False
+    
+    # Optimize RealESRGAN for GPU if available, otherwise set half to False for CPU
+    upsampler = RealESRGANer(
+        scale=2,  # Use scale=2 to match demo's upscaling settings
+        model_path=realesrgan_model_path, 
+        model=model, 
+        tile=400,  # Set tile size for large images
+        tile_pad=10, 
+        pre_pad=0, 
+        half=half  # Set half precision for GPU only
+    )
 
     # Initialize GFPGANer with RealESRGAN as background upsampler
     face_enhancer = GFPGANer(
-        model_path=gfpgan_model_path, upscale=2, arch='clean', channel_multiplier=2, bg_upsampler=upsampler)
+        model_path=gfpgan_model_path, 
+        upscale=2,  # Set upscale to 2, matching demo settings
+        arch='clean', 
+        channel_multiplier=2, 
+        bg_upsampler=upsampler  # Use RealESRGAN as background upsampler
+    )
 
     # Enhance the image using GFPGAN v1.4 with RealESRGAN upscaling
-    _, _, output = face_enhancer.enhance(image, has_aligned=False, only_center_face=False, paste_back=True)
+    # Added 'weight' parameter to allow fine-tuning face restoration
+    _, _, output = face_enhancer.enhance(
+        image, 
+        has_aligned=False,  # No aligned faces
+        only_center_face=False,  # Restore all faces in the image
+        paste_back=True,  # Paste restored faces back into the original image
+        weight=0.5  # Default weight for blending restored face and original
+    )
 
     # Save the output image to a buffer
     _, buffer = cv2.imencode('.png', output)
