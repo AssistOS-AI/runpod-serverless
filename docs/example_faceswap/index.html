@@ -17,17 +17,21 @@
     <label for="apiKey">RunPOD API Key:</label>
     <input type="password" id="apiKey" name="apiKey" value="" required>
 
-    <label for="SourceFile">Choose SourceFile:</label>
+    <label for="SourceFile">Choose Source Image:</label>
+    <p class="description">(the image with the face that you want to use)</p>
     <input type="file" id="SourceFile" name="SourceFile" required>
 
-    <label for="SourceFileIndex">Choose SourceFileIndex:</label>
-    <input type="number" id="SourceFileIndex" name="SourceFileIndex" required>
+    <label for="SourceFileIndex">Choose Source Face Position:</label>
+    <p class="description">[in case there are multiple faces on the image specify which should be used from the left, starting at 1]</p>
+    <input type="number" id="SourceFileIndex" name="SourceFileIndex" required min="1">
 
-    <label for="DestinationFile">Choose DestinationFile:</label>
+    <label for="DestinationFile">Choose Destination Image:</label>
+    <p class="description">(the image with the face that you want to replace)</p>
     <input type="file" id="DestinationFile" name="DestinationFile" required>
 
-    <label for="DestinationFileIndex">Choose DestinationFileIndex:</label>
-    <input type="number" id="DestinationFileIndex" name="DestinationFileIndex" required>
+    <label for="DestinationFileIndex">Choose Destination Face Position:</label>
+    <p class="description">[in case there are multiple faces on the image specify which should be used from the left, starting at 1]</p>
+    <input type="number" id="DestinationFileIndex" name="DestinationFileIndex" required min="1">
 
     <input type="button" value="Upload" onclick="uploadFile()">
 
