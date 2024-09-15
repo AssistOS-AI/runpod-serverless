@@ -8,9 +8,31 @@ function generateRandomString(length) {
     const base64UrlString = base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return base64UrlString;
 }
+function saveCredentials() {
+    const accessKeyId = document.getElementById('accessKeyId').value;
+    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const apiKey = document.getElementById('apiKey').value;
 
+    localStorage.setItem('accessKeyId', accessKeyId);
+    localStorage.setItem('secretAccessKey', secretAccessKey);
+    localStorage.setItem('apiKey', apiKey);
+}
+function restoreCredentials() {
+    const accessKeyId = localStorage.getItem('accessKeyId');
+    const secretAccessKey = localStorage.getItem('secretAccessKey');
+    const apiKey = localStorage.getItem('apiKey');
+
+    if (accessKeyId) {
+        document.getElementById('accessKeyId').value = accessKeyId;
+    }
+    if (secretAccessKey) {
+        document.getElementById('secretAccessKey').value = secretAccessKey;
+    }
+    if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+    }
+}
 function uploadFile() {
-    console.log("sunt aici");
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
@@ -26,7 +48,6 @@ function uploadFile() {
     const file = fileInput.files[0];
     const fileExtension = file.name.split('.').pop(); // Extract the file extension
     randomKey = generateRandomString(16) + "." + fileExtension; // Append the extension to the random key
-    console.log("sunt aici1");
     const s3 = new AWS.S3({
         endpoint: new AWS.Endpoint(endpoint),
         credentials: new AWS.Credentials({
@@ -44,7 +65,6 @@ function uploadFile() {
     };
 
     loadingSpinner.style.display = '';
-    console.log("sunt aici3");
     s3.upload(params, function(err, data) {
         loadingSpinner.style.display = 'none';
 
@@ -57,18 +77,17 @@ function uploadFile() {
             alert('File uploaded successfully!');
         }
     });
-    console.log("sunt aici4");
 }
 
 function submitForm(event) {
+    event.preventDefault();
+    saveCredentials();
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const prompt = document.getElementById('prompt').value;
     const negativePrompt = document.getElementById('negativePrompt').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    event.preventDefault();
-
     const apiKey = document.getElementById('apiKey').value;
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -155,3 +174,4 @@ function displayResult(outputUrl) {
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
     document.getElementById('inputForm').style.display = ''; // Show the form again
 }
+document.addEventListener('DOMContentLoaded', restoreCredentials);
