@@ -117,7 +117,7 @@ function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
-    const statusUrl = `hhttps://api.runpod.ai/v2/7k9vwti9qqsc8i/status/${requestId}`;
+    const statusUrl = `https://api.runpod.ai/v2/7k9vwti9qqsc8i/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
