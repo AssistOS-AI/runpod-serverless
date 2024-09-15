@@ -35,7 +35,7 @@ function restoreCredentials() {
 }
 
 function uploadFile() {
-	@@ -81,15 +81,15 @@ function submitForm(event) {
+	function submitForm(event) {
         "input": {
             "bucket_name": bucketName,
             "input_key": randomKey,
@@ -51,7 +51,7 @@ function uploadFile() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-	@@ -111,7 +111,7 @@ function submitForm(event) {
+	function submitForm(event) {
 }
 
 function checkStatus(requestId, apiKey) {
@@ -59,7 +59,7 @@ function checkStatus(requestId, apiKey) {
     const loadingSpinner = document.getElementById('loadingSpinner');
     const form = document.getElementById('inputForm');
 
-	@@ -132,7 +132,7 @@ function checkStatus(requestId, apiKey) {
+	function checkStatus(requestId, apiKey) {
                 if (data.status === 'COMPLETED') {
                     clearInterval(intervalId);
                     loadingSpinner.style.display = 'none'; // Hide spinner when completed
@@ -67,7 +67,7 @@ function checkStatus(requestId, apiKey) {
                 }
             })
             .catch(error => {
-	@@ -146,6 +146,6 @@ function checkStatus(requestId, apiKey) {
+	function checkStatus(requestId, apiKey) {
 
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
