@@ -5,6 +5,7 @@ import io
 import requests
 import runpod
 import boto3
+import torch  # Import PyTorch pentru verificarea GPU-ului
 from gfpgan.utils import GFPGANer
 from realesrgan.utils import RealESRGANer
 from basicsr.archs.srvgg_arch import SRVGGNetCompact
