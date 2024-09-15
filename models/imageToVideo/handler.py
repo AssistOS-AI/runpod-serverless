@@ -32,6 +32,7 @@ def handler(job):
     response = s3.get_object(Bucket=bucket_name, Key=input_key)
     image_data = response['Body'].read()
     image = Image.open(io.BytesIO(image_data))
+    image = Image.open(io.BytesIO(image_data)).convert("RGB")
 
     # Resize image to the expected dimensions
     image = image.resize((1024, 576))
