@@ -1,5 +1,7 @@
-let uploadedFileUrl = '';
-let randomKey = '';
+let sourceFileKey = '';
+let destinationFileKey = '';
+let sourceFileUrl = '';
+let destinationFileUrl = '';
 
 // Function to generate a random string
 function generateRandomString(length) {
@@ -40,24 +42,23 @@ function uploadFile() {
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-
+    
+    // Select file inputs
     const sourceFileInput = document.getElementById('SourceFile');
     const destinationFileInput = document.getElementById('DestinationFile');
-    
-    const loadingSpinner = document.getElementById('loadingSpinner');
     
     if (!sourceFileInput.files.length || !destinationFileInput.files.length) {
         alert('Please select both source and destination files to upload.');
         return;
     }
-
+    
     const sourceFile = sourceFileInput.files[0];
     const destinationFile = destinationFileInput.files[0];
 
     const sourceFileExtension = sourceFile.name.split('.').pop();
     const destinationFileExtension = destinationFile.name.split('.').pop();
-    const sourceFileKey = generateRandomString(16) + "." + sourceFileExtension;
-    const destinationFileKey = generateRandomString(16) + "." + destinationFileExtension;
+    sourceFileKey = generateRandomString(16) + "." + sourceFileExtension;
+    destinationFileKey = generateRandomString(16) + "." + destinationFileExtension;
 
     const s3 = new AWS.S3({
         endpoint: new AWS.Endpoint(endpoint),
@@ -67,61 +68,7 @@ function uploadFile() {
         }),
         s3ForcePathStyle: true,
     });
-    const params = {
-        Bucket: bucketName,
-        Key: randomKey,
-        Body: file,
-        ACL: 'public-read'
-    };
-    loadingSpinner.style.display = '';
-    s3.upload(params, function(err, data) {
-        loadingSpinner.style.display = 'none';
-        if (err) {
-            console.error('Upload Error:', err);
-            alert('File upload failed: ' + err.message);
-        } else {
-            console.log('Upload Success:', data);
-            uploadedFileUrl = data.Location;
-            alert('File uploaded successfully!');
-        }
-    });
-}function uploadFile() {
-    const accessKeyId = document.getElementById('accessKeyId').value;
-    const secretAccessKey = document.getElementById('secretAccessKey').value;
-    const bucketName = 'assistos-demo-bucket';
-    const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    
-    // Selectarea inputurilor de fișiere
-    const sourceFileInput = document.getElementById('SourceFile');
-    const destinationFileInput = document.getElementById('DestinationFile');
-    
-    // Verificarea dacă fișierele au fost selectate
-    if (!sourceFileInput.files.length || !destinationFileInput.files.length) {
-        alert('Please select both source and destination files to upload.');
-        return;
-    }
 
-    // Pregătirea fișierelor pentru încărcare
-    const sourceFile = sourceFileInput.files[0];
-    const destinationFile = destinationFileInput.files[0];
-
-    // Generarea cheilor unice pentru fiecare fișier
-    const sourceFileExtension = sourceFile.name.split('.').pop();
-    const destinationFileExtension = destinationFile.name.split('.').pop();
-    const sourceFileKey = generateRandomString(16) + "." + sourceFileExtension;
-    const destinationFileKey = generateRandomString(16) + "." + destinationFileExtension;
-
-    // Inițializarea AWS S3
-    const s3 = new AWS.S3({
-        endpoint: new AWS.Endpoint(endpoint),
-        credentials: new AWS.Credentials({
-            accessKeyId: accessKeyId,
-            secretAccessKey: secretAccessKey
-        }),
-        s3ForcePathStyle: true,
-    });
-
-    // Setarea parametrii pentru fiecare fișier
     const sourceFileParams = {
         Bucket: bucketName,
         Key: sourceFileKey,
@@ -136,25 +83,19 @@ function uploadFile() {
         ACL: 'public-read'
     };
 
-    // Afișarea spinner-ului de încărcare
     const loadingSpinner = document.getElementById('loadingSpinner');
     loadingSpinner.style.display = '';
 
-    // Încărcarea fișierelor în paralel
     const uploadSourceFile = s3.upload(sourceFileParams).promise();
     const uploadDestinationFile = s3.upload(destinationFileParams).promise();
 
-    // Gestionarea rezultatelor încărcării
     Promise.all([uploadSourceFile, uploadDestinationFile])
         .then(results => {
             loadingSpinner.style.display = 'none';
             console.log('Upload Success:', results);
+            sourceFileUrl = results[0].Location;
+            destinationFileUrl = results[1].Location;
             alert('Files uploaded successfully!');
-            // Dacă este necesar, poți salva URL-urile fișierelor încărcate
-            const sourceFileUrl = results[0].Location;
-            const destinationFileUrl = results[1].Location;
-            console.log('Source File URL:', sourceFileUrl);
-            console.log('Destination File URL:', destinationFileUrl);
         })
         .catch(err => {
             loadingSpinner.style.display = 'none';
@@ -164,20 +105,27 @@ function uploadFile() {
 }
 
 function submitForm(event) {
+    event.preventDefault();
+
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    event.preventDefault();
     const apiKey = document.getElementById('apiKey').value;
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    if (!uploadedFileUrl || !destinationFileUrl) {
+
+    const sourceFileIndex = document.getElementById('SourceFileIndex').value;
+    const destinationFileIndex = document.getElementById('DestinationFileIndex').value;
+
+    if (!sourceFileKey || !destinationFileKey) {
         alert('Please upload both source and destination files first.');
         return;
     }
+    
     form.style.display = 'none';
     loadingSpinner.style.display = '';
+
     const requestBody = {
         "input": {
             "bucket_name": bucketName,
@@ -201,18 +149,19 @@ function submitForm(event) {
         },
         body: JSON.stringify(requestBody)
     })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Request ID:', data.id);
-            checkStatus(data.id, apiKey);
-        })
-        .catch((error) => {
-            loadingSpinner.style.display = 'none';
-            form.style.display = '';
-            console.error('Error:', error);
-            alert('Request failed: ' + error);
-        });
+    .then(response => response.json())
+    .then(data => {
+        console.log('Request ID:', data.id);
+        checkStatus(data.id, apiKey);
+    })
+    .catch((error) => {
+        loadingSpinner.style.display = 'none';
+        form.style.display = '';
+        console.error('Error:', error);
+        alert('Request failed: ' + error);
+    });
 }
+
 function checkStatus(requestId, apiKey) {
     const statusUrl = `https://api.runpod.ai/v2/nvxq25nz8lnrm7/status/${requestId}`;
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -228,28 +177,29 @@ function checkStatus(requestId, apiKey) {
                 'Authorization': `Bearer ${apiKey}`
             }
         })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Status:', data.status);
-                if (data.status === 'COMPLETED') {
-                    clearInterval(intervalId);
-                    loadingSpinner.style.display = 'none'; // Hide spinner when completed
-                    displayResult(data.output);
-                } else if (data.status === 'FAILED') {
+        .then(response => response.json())
+        .then(data => {
+            console.log('Status:', data.status);
+            if (data.status === 'COMPLETED') {
                 clearInterval(intervalId);
-                loadingSpinner.style.display = 'none'; // Ascunde spinner-ul în caz de eroare
-                form.style.display = ''; // Afișează formularul din nou
-                alert('The request failed. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                loadingSpinner.style.display = 'none'; // Hide spinner when completed
+                displayResult(data.output);
+            } else if (data.status === 'FAILED') {
                 clearInterval(intervalId);
                 loadingSpinner.style.display = 'none'; // Hide spinner on error
                 form.style.display = ''; // Show form again if there's an error
-            });
+                alert('The request failed. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            clearInterval(intervalId);
+            loadingSpinner.style.display = 'none'; // Hide spinner on error
+            form.style.display = ''; // Show form again if there's an error
+        });
     }, 5000);
 }
+
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
