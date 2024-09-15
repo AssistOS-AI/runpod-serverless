@@ -10,8 +10,10 @@ function generateRandomString(length) {
 }
 
 function uploadFile() {
-    const accessKeyId = document.getElementById('accessKeyId').value;
-    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    // const accessKeyId = document.getElementById('accessKeyId').value;
+    const accessKeyId = "DO00CZVC2QVLYDAFAWLX";
+    // const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const secretAccessKey = "qfvN6R5OhnyG0+pm6Yk1OaU+HV+4/t2vwgSji045+nQ";
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
     const fileInput = document.getElementById('fileInput');
@@ -59,13 +61,16 @@ function uploadFile() {
 }
 
 function submitForm(event) {
-    const accessKeyId = document.getElementById('accessKeyId').value;
-    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    // const accessKeyId = document.getElementById('accessKeyId').value;
+    const accessKeyId = "DO00CZVC2QVLYDAFAWLX";
+    // const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const secretAccessKey = "qfvN6R5OhnyG0+pm6Yk1OaU+HV+4/t2vwgSji045+nQ";
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
     event.preventDefault();
 
-    const apiKey = document.getElementById('apiKey').value;
+    // const apiKey = document.getElementById('apiKey').value;
+    const apiKey = "YZI69FTK1YL01QUQ787EU296M2JKRPTGAPOHWVO2";
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
 
