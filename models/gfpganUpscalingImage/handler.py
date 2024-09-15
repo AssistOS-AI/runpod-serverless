@@ -62,15 +62,7 @@ def handler(job):
     half = True if torch.cuda.is_available() and torch.cuda.get_device_capability(0)[0] >= 7 else False
     
     # Optimize RealESRGAN for GPU if available, otherwise set half to False for CPU
-    upsampler = RealESRGANer(
-        scale=2,  # Use scale=2 to match demo's upscaling settings
-        model_path=realesrgan_model_path, 
-        model=model, 
-        tile=400,  # Set tile size for large images
-        tile_pad=10, 
-        pre_pad=0, 
-        half=half  # Set half precision for GPU only
-    )
+    upsampler = RealESRGANer(scale=4, model_path=model_path, model=model, tile=0, tile_pad=10, pre_pad=0, half=half)
 
     # Initialize GFPGANer with RealESRGAN as background upsampler
     face_enhancer = GFPGANer(
