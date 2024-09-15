@@ -8,6 +8,32 @@ function generateRandomString(length) {
     return base64UrlString.substring(0, length); // Limit the random string length
 }
 
+function saveCredentials() {
+    const accessKeyId = document.getElementById('accessKeyId').value;
+    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const apiKey = document.getElementById('apiKey').value;
+
+    localStorage.setItem('accessKeyId', accessKeyId);
+    localStorage.setItem('secretAccessKey', secretAccessKey);
+    localStorage.setItem('apiKey', apiKey);
+}
+
+function restoreCredentials() {
+    const accessKeyId = localStorage.getItem('accessKeyId');
+    const secretAccessKey = localStorage.getItem('secretAccessKey');
+    const apiKey = localStorage.getItem('apiKey');
+
+    if (accessKeyId) {
+        document.getElementById('accessKeyId').value = accessKeyId;
+    }
+    if (secretAccessKey) {
+        document.getElementById('secretAccessKey').value = secretAccessKey;
+    }
+    if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+    }
+}
+
 function uploadFile() {
 	@@ -81,15 +81,15 @@ function submitForm(event) {
         "input": {
@@ -48,3 +74,5 @@ function displayResult(outputUrl) {
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output video.</p>`;
     document.getElementById('inputForm').style.display = ''; // Show the form again
 }
+
+document.addEventListener('DOMContentLoaded', restoreCredentials);
