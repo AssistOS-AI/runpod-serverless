@@ -7,6 +7,33 @@ function generateRandomString(length) {
     const base64UrlString = base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return base64UrlString;
 }
+
+function saveCredentials() {
+    const accessKeyId = document.getElementById('accessKeyId').value;
+    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const apiKey = document.getElementById('apiKey').value;
+
+    localStorage.setItem('accessKeyId', accessKeyId);
+    localStorage.setItem('secretAccessKey', secretAccessKey);
+    localStorage.setItem('apiKey', apiKey);
+}
+
+function restoreCredentials() {
+    const accessKeyId = localStorage.getItem('accessKeyId');
+    const secretAccessKey = localStorage.getItem('secretAccessKey');
+    const apiKey = localStorage.getItem('apiKey');
+
+    if (accessKeyId) {
+        document.getElementById('accessKeyId').value = accessKeyId;
+    }
+    if (secretAccessKey) {
+        document.getElementById('secretAccessKey').value = secretAccessKey;
+    }
+    if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+    }
+}
+
 function uploadFile() {
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
@@ -49,11 +76,13 @@ function uploadFile() {
     });
 }
 function submitForm(event) {
+    event.preventDefault();
+    saveCredentials();
     const accessKeyId = document.getElementById('accessKeyId').value;
     const secretAccessKey = document.getElementById('secretAccessKey').value;
     const bucketName = 'assistos-demo-bucket';
     const endpoint = 'https://assistos-demo-bucket.fra1.digitaloceanspaces.com';
-    event.preventDefault();
+
     const apiKey = document.getElementById('apiKey').value;
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -130,3 +159,5 @@ function displayResult(outputUrl) {
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
     document.getElementById('inputForm').style.display = ''; // Show the form again
 }
+
+document.addEventListener('DOMContentLoaded', restoreCredentials);
