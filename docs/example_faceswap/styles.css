@@ -30,7 +30,10 @@ label {
     display: block;
 }
 
-input[type="text"], input[type="password"], input[type="file"], input[type="number"] {
+input[type="text"], 
+input[type="password"], 
+input[type="file"], 
+input[type="number"] {
     width: 100%;
     padding: 12px;
     margin: 10px 0 20px 0;
@@ -41,7 +44,20 @@ input[type="text"], input[type="password"], input[type="file"], input[type="numb
     font-size: 1em;
 }
 
-input[type="button"], input[type="submit"] {
+/* Stil pentru inputurile de tip number */
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+    -webkit-appearance: none; /* Safari and Chrome */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="button"], 
+input[type="submit"] {
     width: 100%;
     background-color: #4285f4;
     color: white;
@@ -53,7 +69,8 @@ input[type="button"], input[type="submit"] {
     font-size: 1em;
 }
 
-input[type="button"]:hover, input[type="submit"]:hover {
+input[type="button"]:hover, 
+input[type="submit"]:hover {
     background-color: #357ae8;
 }
 
