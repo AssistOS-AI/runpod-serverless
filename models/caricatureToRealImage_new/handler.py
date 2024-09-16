@@ -70,7 +70,7 @@ def handler(job):
         ).to("cuda")
 
         # Load Stable Diffusion XL model and scheduler
-        model_id = 'stabilityai/stable-diffusion'
+        model_id = 'stabilityai/stable-diffusion-xl-base-1.0'
         euler_a = EulerAncestralDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
         vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
 
