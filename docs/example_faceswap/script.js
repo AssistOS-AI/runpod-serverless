@@ -129,10 +129,10 @@ function submitForm(event) {
     const requestBody = {
         "input": {
             "bucket_name": bucketName,
-            "source_file_key": sourceFileKey,
-            "destination_file_key": destinationFileKey,
-            "source_file_index": sourceFileIndex,
-            "destination_file_index": destinationFileIndex,
+            "source_key": sourceFileKey,
+            "destination_key": destinationFileKey,
+            "source_face_index": sourceFileIndex,
+            "destination_face_index": destinationFileIndex,
             "output_key": generateRandomString(16),
             "aws_access_key_id": accessKeyId,
             "aws_secret_access_key": secretAccessKey,
