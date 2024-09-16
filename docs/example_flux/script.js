@@ -8,23 +8,55 @@ function generateRandomString(length) {
     return base64UrlString;
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    // Retrieve data from local storage and populate the form fields
-    const formFields = ["accessKeyId", "secretAccessKey", "apiKey", "authApiKey", "prompt"];
-    formFields.forEach(field => {
-        const value = localStorage.getItem(field);
-        if (value) {
-            document.getElementById(field).value = value;
-        }
-    });
+// document.addEventListener("DOMContentLoaded", function() {
+//     // Retrieve data from local storage and populate the form fields
+//     const formFields = ["accessKeyId", "secretAccessKey", "apiKey", "authApiKey", "prompt"];
+//     formFields.forEach(field => {
+//         const value = localStorage.getItem(field);
+//         if (value) {
+//             document.getElementById(field).value = value;
+//         }
+//     });
 
-    // Save form data to local storage on input change
-    formFields.forEach(field => {
-        document.getElementById(field).addEventListener("input", function() {
-            localStorage.setItem(field, this.value);
-        });
-    });
-});
+//     // Save form data to local storage on input change
+//     formFields.forEach(field => {
+//         document.getElementById(field).addEventListener("input", function() {
+//             localStorage.setItem(field, this.value);
+//         });
+//     });
+// });
+
+function saveCredentials() {
+    const accessKeyId = document.getElementById('accessKeyId').value;
+    const secretAccessKey = document.getElementById('secretAccessKey').value;
+    const apiKey = document.getElementById('apiKey').value;
+    const authApiKey = document.getElementById('authApiKey').value;
+
+    localStorage.setItem('accessKeyId', accessKeyId);
+    localStorage.setItem('secretAccessKey', secretAccessKey);
+    localStorage.setItem('apiKey', apiKey);
+    localStorage.setItem('authApiKey', authApiKey);
+}
+
+function restoreCredentials() {
+    const accessKeyId = localStorage.getItem('accessKeyId');
+    const secretAccessKey = localStorage.getItem('secretAccessKey');
+    const apiKey = localStorage.getItem('apiKey');
+    const authApiKey = localStorage.getItem('authApiKey');
+
+    if (accessKeyId) {
+        document.getElementById('accessKeyId').value = accessKeyId;
+    }
+    if (secretAccessKey) {
+        document.getElementById('secretAccessKey').value = secretAccessKey;
+    }
+    if (apiKey) {
+        document.getElementById('apiKey').value = apiKey;
+    }
+    if (authApiKey) {
+        document.getElementById('authApiKey').value = authApiKey;
+    }
+}
 
 function submitForm(event) {
     const accessKeyId = document.getElementById('accessKeyId').value;
@@ -118,7 +150,8 @@ function checkStatus(requestId, apiKey) {
 
 function displayResult(outputUrl) {
     const resultDiv = document.getElementById('result');
-    document.getElementById('inputForm').style.display = 'none';
     resultDiv.innerHTML = `<p>Processing completed. <a href="${outputUrl}" target="_blank">Click here</a> to view the output image.</p>`;
     document.getElementById('inputForm').style.display = ''; // Show the form again
 }
+
+document.addEventListener('DOMContentLoaded', restoreCredentials);
