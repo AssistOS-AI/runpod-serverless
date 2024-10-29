@@ -13,7 +13,7 @@ WORKDIR /
 COPY . /
 
 # Set the working directory to the specific model directory
-WORKDIR /models/cuquiXTTSv2
+WORKDIR /models/coquiXTTSv2
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
