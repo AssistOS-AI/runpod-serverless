@@ -1,0 +1,10 @@
+torch==2.1.0
+torchaudio==2.1.0
+numpy<2
+runpod
+boto3
+TTS==0.22.0
+soundfile
+scipy
+pydub
+ffmpeg-python
