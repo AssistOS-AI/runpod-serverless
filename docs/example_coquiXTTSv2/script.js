@@ -92,26 +92,28 @@ function handleError(message) {
     const submitBtn = document.getElementById('submitBtn');
     const errorDiv = document.getElementById('error');
 
-    form.classList.remove('hidden');
-    loadingSpinner.classList.add('hidden');
-    submitBtn.disabled = false;
+    if (form) form.classList.remove('hidden');
+    if (loadingSpinner) loadingSpinner.classList.add('hidden');
+    if (submitBtn) submitBtn.disabled = false;
 
-    errorDiv.textContent = `Error: ${message}`;
-    errorDiv.classList.remove('hidden');
+    if (errorDiv) {
+        errorDiv.textContent = `Error: ${message}`;
+        errorDiv.classList.remove('hidden');
+    }
 }
-
 async function submitForm(event) {
     event.preventDefault();
 
     // Get form elements
     const form = document.getElementById('inputForm');
+    const loadingSpinner = document.getElementById('loadingSpinner');
     const resultDiv = document.getElementById('result');
     const errorDiv = document.getElementById('error');
     const submitBtn = document.getElementById('submitBtn');
 
     // Hide previous results and errors
-    resultDiv.classList.add('hidden');
-    errorDiv.classList.add('hidden');
+    if (resultDiv) resultDiv.classList.add('hidden');
+    if (errorDiv) errorDiv.classList.add('hidden');
 
     try {
         showSpinner();
@@ -129,9 +131,9 @@ async function submitForm(event) {
         saveCredentials();
 
         // Show loading state
-        form.classList.add('hidden');
-        loadingSpinner.classList.remove('hidden');
-        submitBtn.disabled = true;
+        if (form) form.classList.add('hidden');
+        if (loadingSpinner) loadingSpinner.classList.remove('hidden');
+        if (submitBtn) submitBtn.disabled = true;
 
         // S3 Configuration
         const s3Config = {
