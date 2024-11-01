@@ -1,3 +1,15 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure spinner is hidden on page load
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+    }
+
+    // Rest of your initialization code...
+    restoreCredentials();
+    document.getElementById('inputForm').addEventListener('submit', submitForm);
+});
+
 let randomKey = '';
 
 function generateRandomString(length) {
@@ -26,7 +38,7 @@ function restoreCredentials() {
 }
 
 // Handle voice cloning checkbox
-document.getElementById('enableVoiceClone').addEventListener('change', function() {
+document.getElementById('enableVoiceClone').addEventListener('change', function () {
     const voiceCloneOptions = document.getElementById('voiceCloneOptions');
     voiceCloneOptions.classList.toggle('hidden', !this.checked);
     const referenceAudio = document.getElementById('referenceAudio');
@@ -60,6 +72,20 @@ function getFileExtension(filename) {
     return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
 }
 
+function showSpinner() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = 'block';
+    }
+}
+
+function hideSpinner() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = 'none';
+    }
+}
+
 function handleError(message) {
     const form = document.getElementById('inputForm');
     const loadingSpinner = document.getElementById('loadingSpinner');
@@ -79,7 +105,6 @@ async function submitForm(event) {
 
     // Get form elements
     const form = document.getElementById('inputForm');
-    const loadingSpinner = document.getElementById('loadingSpinner');
     const resultDiv = document.getElementById('result');
     const errorDiv = document.getElementById('error');
     const submitBtn = document.getElementById('submitBtn');
@@ -89,6 +114,9 @@ async function submitForm(event) {
     errorDiv.classList.add('hidden');
 
     try {
+        showSpinner();
+        form.classList.add('hidden');
+        submitBtn.disabled = true;
         // Get form values
         const accessKeyId = document.getElementById('accessKeyId').value;
         const secretAccessKey = document.getElementById('secretAccessKey').value;
@@ -155,6 +183,7 @@ async function submitForm(event) {
 
     } catch (error) {
         console.error('Error:', error);
+        hideSpinner();
         handleError(error.message);
     }
 }
@@ -186,14 +215,13 @@ function checkStatus(requestId, apiKey) {
 
 function displayResult(output) {
     const form = document.getElementById('inputForm');
-    const loadingSpinner = document.getElementById('loadingSpinner');
     const resultDiv = document.getElementById('result');
     const submitBtn = document.getElementById('submitBtn');
     const audioElement = document.getElementById('audioElement');
     const downloadLink = document.getElementById('downloadLink');
 
-    // Reset UI states
-    loadingSpinner.classList.add('hidden');
+    // Hide spinner and show form
+    hideSpinner();
     form.classList.remove('hidden');
     submitBtn.disabled = false;
     resultDiv.classList.remove('hidden');
@@ -206,7 +234,7 @@ function displayResult(output) {
     downloadLink.href = audioUrl;
 
     // Scroll to the result
-    resultDiv.scrollIntoView({ behavior: 'smooth' });
+    resultDiv.scrollIntoView({behavior: 'smooth'});
 }
 
 // Initialize the page
@@ -215,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add submit event listener to the form
     document.getElementById('inputForm').addEventListener('submit', submitForm);
     // Add change event listener to voice clone checkbox
-    document.getElementById('enableVoiceClone').addEventListener('change', function() {
+    document.getElementById('enableVoiceClone').addEventListener('change', function () {
         const voiceCloneOptions = document.getElementById('voiceCloneOptions');
         voiceCloneOptions.classList.toggle('hidden', !this.checked);
         const referenceAudio = document.getElementById('referenceAudio');
