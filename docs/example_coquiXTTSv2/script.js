@@ -212,5 +212,15 @@ function displayResult(output) {
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     restoreCredentials();
+    // Add submit event listener to the form
     document.getElementById('inputForm').addEventListener('submit', submitForm);
+    // Add change event listener to voice clone checkbox
+    document.getElementById('enableVoiceClone').addEventListener('change', function() {
+        const voiceCloneOptions = document.getElementById('voiceCloneOptions');
+        voiceCloneOptions.classList.toggle('hidden', !this.checked);
+        const referenceAudio = document.getElementById('referenceAudio');
+        if (!this.checked) {
+            referenceAudio.value = '';
+        }
+    });
 });
